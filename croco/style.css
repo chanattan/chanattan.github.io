@@ -1,0 +1,125 @@
+.title {
+	font-family: 'Georgia', serif;
+	text-align:center;
+	color:white;
+	animation: anim1 3.5s linear;
+}
+
+.button {
+  background-color: #e7e7e7;
+  border-radius: 4px;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+  margin-left:auto;
+  margin-right:auto;
+  font-size: 16px;
+  transition-duration: 0.4s;
+	opacity: 0;
+	animation: fade_in_from_none 2s forwards 4s;
+}
+
+.button:hover {
+	background-color: black;
+    color: white;
+}
+
+.button:active {
+  background-color: #e7e7e7;
+  box-shadow: 0 3px #666;
+  transform: translateY(2px);
+}
+
+.question {
+	font-family: 'Georgia', serif;
+	text-align:center;
+	color:white;
+	opacity:0;
+	animation: anim2 5s forwards 2.5s;
+}
+
+img {
+	transition: transform .5s;
+}
+
+img:hover {
+	
+	transform: scale(1.1) rotate(-1.5deg);
+	opacity:1;
+}
+
+.rotate {
+	animation: rotateAnimation 2.5s linear;
+}
+
+.rotate2 {
+	animation: rotateAnimation 3s linear;
+}
+
+.rotate3 {
+	animation: rotateAnimation 3.5s linear;
+}
+
+.nothing {
+}
+
+.hidden {
+	display: none;
+}
+
+.right {
+    display: block;
+	position: relative;
+	margin-left: auto;
+	margin-right: auto;
+	animation: color_change2 2s linear, move_right 2.5s forwards 1.5s;
+}
+
+.wrong {
+	animation: color_change 1.5s alternate-reverse;
+}
+
+@keyframes fade_in_from_none {
+	0% {
+        display: none;
+        opacity: 0;
+    }
+
+    1% {
+        display: block;
+        opacity: 0;
+    }
+
+    100% {
+        display: block;
+        opacity: 1;
+    }
+}
+@keyframes move_right {
+	from {top:0;left:0;}
+	to {top:-10%;left:-40%;width:10%;}
+}
+@keyframes color_change {
+	0% {filter: invert(0%);}
+	50% {filter: invert(100%);}
+	100% {filter: invert(0%);}
+}
+@keyframes color_change2 {
+	0% {filter: saturate(0);}
+	50% {filter: saturate(10);}
+	100% {filter: saturate(0);}
+}
+@keyframes rotateAnimation {
+	from {transform: rotateY(0deg);opacity:0}
+	to {transform: rotateY(360deg);opacity:1}
+}
+@keyframes anim1 {
+	from {transform: translateY(-250pt);}
+	to {transform: translateY(0);}
+}
+@keyframes anim2 {
+	from {opacity:0}
+	to {opacity:1}
+}
