@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Chanattan Sok's website</title>
+<title>Chanattan Sok</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -9,144 +9,144 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
 body, h1,h2,h3,h4,h5,h6 {font-family: "Montserrat", sans-serif}
-.w3-row-padding img {margin-bottom: 12px}
-/* Set the width of the sidebar to 120px */
-.w3-sidebar {width: 120px;background: #222;}
-/* Add a left margin to the "page content" that matches the width of the sidebar (120px) */
-#main {margin-left: 120px}
-/* Remove margins from "page content" on small screens */
-@media only screen and (max-width: 600px) {#main {margin-left: 0}}
+body {background-color: #000; color: #ccc; margin: 0;}
+.container {max-width: 1200px; margin: auto; padding: 20px;}
+h1 {font-size: 36px; margin-bottom: 5px;}
+.profile-img {
+  width: 240px;
+  margin-top: -10px;
+  border-radius: 40px;
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+  background-color: transparent;
+}
+.flex-row {display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 40px;}
+.flex-col {flex: 1; min-width: 300px;}
+.about-text {max-width: 880px; text-align: justify;} /* tighter text */
+.section {margin-top: 20px;}
+.menu {margin: 15px 0; font-size: 19px;}
+.menu a {margin: 0 18px; text-decoration: none; color: #ccc; font-weight: 600;}
+.menu a:hover {color: orange;}
+.keyword-bar {display: flex; flex-wrap: wrap; justify-content: center; background: #e67e22; color: #000; padding: 6px; border-radius: 6px; font-size: 14px; margin-top: 15px;}
+.keyword-bar div {margin: 4px 12px;}
+.profile-item {display: flex; align-items: center; margin: 8px 0;}
+.profile-item i {font-size: 22px; margin-right: 10px;}
+.profile-item span {font-size: 15px;}
+.btn-full {display: block; width: 100%; margin: 10px 0; padding: 10px; background: #e67e22; border: none; color: #000; font-weight: 600; cursor: pointer; border-radius: 6px; text-decoration: none;}
+.btn-full:hover {background: #cc6600; color: #fff;}
+.col-title {font-size: 20px; margin-bottom: 12px;}
+.email-row {margin-top: 20px; text-align: center;}
+.croco {text-align: right; margin-top: 10px;}
+.croco button {background: none; border: none; color: #666; cursor: pointer; font-weight: 600;}
+.croco button:hover {color: orange;}
+ul.publications {list-style-type: disc; padding-left: 20px;}
+ul.publications li {margin-bottom: 12px; font-size: 15px;}
+.pub-title {font-weight: 600;}
+.pub-meta {font-size: 14px; color: #999; margin-top: 2px;}
+ul.publications a {color: orange; text-decoration: none;}
+ul.publications a:hover {text-decoration: underline;}
 </style>
 </head>
-<body class="w3-black">
+<body>
 
-<!-- Icon Bar (Sidebar - hidden on small screens) -->
-<nav class="w3-sidebar w3-bar-block w3-small w3-hide-small w3-center">
-  <a href="#" class="w3-bar-item w3-button w3-padding-large w3-black">
-    <p>Start</p>
-  </a>
-  <a href="#about" class="w3-bar-item w3-button w3-padding-large w3-hover-black">
-    <p>About</p>
-  </a>
-  <a href="#projects" class="w3-bar-item w3-button w3-padding-large w3-hover-black">
-    <p>Projects</p>
-  </a>
-  <a href="#contact" class="w3-bar-item w3-button w3-padding-large w3-hover-black">
-    <p>Contact</p>
-  </a>
-</nav>
-
-<!-- Navbar on small screens (Hidden on medium and large screens) -->
-<div class="w3-top w3-hide-large w3-hide-medium" id="myNavbar">
-  <div class="w3-bar w3-black w3-opacity w3-hover-opacity-off w3-center w3-small">
-    <a href="#" class="w3-bar-item w3-button" style="width:25% !important">Start</a>
-    <a href="#about" class="w3-bar-item w3-button" style="width:25% !important">About</a>
-    <a href="#projects" class="w3-bar-item w3-button" style="width:25% !important">Projects</a>
-    <a href="#contact" class="w3-bar-item w3-button" style="width:25% !important">Contact</a>
-  </div>
-</div>
-
-<!-- Page Content -->
-<div class="w3-padding-large" id="main">
-  <!-- Header/Home -->
-  <header class="w3-container w3-padding-32 w3-center w3-black" id="home">
-    <h1 class="w3-jumbo"><span class="w3-hide-small"></span>Chanattan R. Sok</h1>
-    <h4>CS student researcher</h4>
-    <img src="mea.jpg" alt="boy" class="w3-image" width="496" height="554">
+<div class="container">
+  <!-- Header -->
+  <header class="w3-center">
+    <h1 class="w3-text-light-grey">Chanattan R. Sok</h1>
+    <h4 style="margin-top:-5px">CS Student Researcher</h4>
+    <div class="menu">
+      <a href="#about">About</a>
+      <a href="research.html">Research</a>
+      <a href="#">Blog</a>
+    </div>
   </header>
 
-  <!-- About Section -->
-  <div class="w3-content w3-justify w3-text-grey w3-padding-64" id="about">
-    <h2 class="w3-text-light-grey">About me</h2>
-    <hr style="width:200px" class="w3-opacity">
-    <p>I am a student at <a href="https://en.wikipedia.org/wiki/%C3%89cole_normale_sup%C3%A9rieure">École Normale Supérieure</a> (ENS) de Rennes in the department of Computer Science, focusing on multi-agent systems.
-        My research integrates decision-making aid, societal concerns, and artificial intelligence (e.g., bandits).
-        With a passion for addressing societal challenges through technology, I leverage multi-agent systems, social choice, and game theory to explore innovative solutions.
+  <!-- About Me Section -->
+  <div class="flex-row section" id="about">
+    <div class="flex-col about-text">
+      <hr style="width:880px; border: 1px solid #e67e22; margin-bottom: 20px;">
+      <p style="margin-bottom:20px">
+        I am a student at <a href="https://en.wikipedia.org/wiki/%C3%89cole_normale_sup%C3%A9rieure" target="_blank">École Normale Supérieure</a> (ENS) de Rennes in the department of Computer Science, focusing on multi-agent systems.
+        My research integrates decision-making aid, societal concerns, and artificial intelligence.
+        I like to address societal/real challenges with multi-agent systems, social choice, and game theory to explore innovative solutions.
         My educational background includes rigorous programs at ENS Rennes and Sorbonne University.
+      </p>
+      <div class="keyword-bar">
+        <div>Agent-based Modeling</div>
+        <div>Decision-making</div>
+        <div>Social Sciences</div>
+        <div>Recommender Systems</div>
+      </div>
+    </div>
+    <div>
+      <img src="mea.jpg" alt="Profile Picture" class="profile-img">
+    </div>
+  </div>
+
+  <!-- Publications -->
+  <div class="section" id="publications">
+    <h3 class="w3-text-light-grey">Publications and preprints</h3>
+    <ul class="publications">
+      <li>
+        <div class="pub-title">
+          <a href="https://hal.science/hal-05151654v1/file/Actes_JFSMA_PFIA2025.pdf#page=128" target="_blank">
+            Simulation et résolution de conflits spatiaux entre piétons fondée sur la théorie du choix social
+          </a>
+        </div>
+        <div class="pub-meta">JFSMA 2025 — Chanattan Sok, Olivier Simonin.</div>
+      </li>
+      <li>
+        <div class="pub-title">
+          <a href="https://dl.acm.org/doi/pdf/10.1145/3676288.3676305" target="_blank">
+            WebAssembly serverless join: A Study of its Application
+          </a>
+        </div>
+        <div class="pub-meta">SSDBM 2024 — Chanattan Sok, Laurent d'Orazio, Reyyan Tekin, Dimitri Tombroff.</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Profiles and Documents -->
+  <div class="flex-row section">
+    <div class="flex-col w3-center">
+      <div class="col-title w3-text-light-grey">Profiles</div>
+      <div class="profile-item">
+        <i class="fa fa-google w3-hover-opacity"></i>
+        <span><a href="https://scholar.google.com/citations?user=svDxKurp8mUC&hl=fr&oi=ao" target="_blank">Google Scholar</a></span>
+      </div>
+      <div class="profile-item">
+        <i class="fa fa-linkedin w3-hover-opacity"></i>
+        <span><a href="https://www.linkedin.com/in/chanattan-sok/" target="_blank">LinkedIn</a></span>
+      </div>
+      <div class="profile-item">
+        <i class="fa fa-github w3-hover-opacity"></i>
+        <span><a href="https://github.com/chanattan" target="_blank">GitHub</a></span>
+      </div>
+    </div>
+
+    <div class="flex-col w3-center">
+      <div class="col-title w3-text-light-grey">Documents</div>
+      <a href="resume.pdf" class="btn-full">Resume</a>
+      <a href="mycv.pdf" class="btn-full">Curriculum Vitæ</a>
+    </div>
+  </div>
+
+  <!-- Email -->
+  <div class="email-row">
+    <p>Email: chanattan[dot]sok(at)ens-rennes{dot}fr</p>
+  </div>
+
+  <!-- Croco-Loop Easter Egg -->
+  <div class="croco">
+    <a href="croco/index.html"><button>Croco‑Loop</button></a>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w3-center w3-padding-16">
+    <p class="w3-small">Powered by 
+      <a href="https://www.w3schools.com/w3css/default.asp" target="_blank" class="w3-hover-text-green">w3.css</a>
     </p>
-    <h3 class="w3-padding-32 w3-text-light-grey w3-center">My interests</h3>
-    <div class="w3-bar w3-orange">
-        <div class="w3-bar-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Agent-based modeling</div>
-        <div class="w3-bar-item">Decision-making aid</div>
-        <div class="w3-bar-item">Societal challenges</div>
-        <div class="w3-bar-item">Social sciences</div>
-        <div class="w3-bar-item">Recommendation systems</div>
-    </div> 
-    <br><br><br>
-
-    <!-- Works -->
-    <h2 class="w3-text-light-grey" id="projects">Ongoing works</h2>
-    <hr style="width:200px" class="w3-opacity">
-    <h5>> JFSMA2025's submission accepted!</h5>
-    <p>The paper on Simulation and resolution of spatial conflicts between pedestrians with social choice has been accepted for this year's edition.</p>
-    
-    <h5>> Guest research fellow at <a href="https://www.citysciencelab.hamburg/">City Science Lab, HafenCity Universität Hamburg</a> in Germany.</h5>
-    <p>Research and model proposal of Hamburg as a connected urban twin towards sustainable urban development.
-      Use of Agent-Based Modeling, simulation and Integrated Assessment Models, working in collaboration with ministries.</p>
-
-    <h5>> Submitted paper at <a href="https://pfia2025.u-bourgogne.fr/conferences/jfsma/">JFSMA 2025</a>.</a></h5>
-    <p>Simulation and resolution of spatial conflicts between pedestrians based on social choice theory.</p>
-
-    <!-- Details -->
-    <h3 class="w3-padding-32 w3-text-light-grey w3-center">Details ahead</h3>
-    <div class="w3-row w3-center w3-padding-16 w3-section w3-light-grey">
-      <div class="w3-quarter w3-section">
-        <a href="https://github.com/chanattan"><span class="fa fa-github w3-xxxlarge w3-hover-opacity"></span></a><br>
-        Github
-      </div>
-      <div class="w3-quarter w3-section">
-        <a href="https://www.linkedin.com/in/chanattan-sok/"><span class="fa fa-linkedin w3-xxxlarge w3-hover-opacity"></span></a>
-        <br>
-        LinkedIn
-      </div>
-      <div class="w3-quarter w3-section">
-        <a href="https://scholar.google.com/citations?user=svDxKurp8mUC&hl=fr&oi=ao"><span class="fa fa-google w3-xxxlarge w3-hover-opacity"></span></a>
-        <br>
-        Scholar
-      </div>
-      <div class="w3-quarter w3-section">
-        <a href="https://dblp.org/pid/384/2473.html"><span class="fa fa-search w3-xxxlarge w3-hover-opacity"></span></a>
-        <br>
-        DBLP
-      </div>
-    </div>
-
-    <br>
-    <div class="w3-center">
-        <a href="mycv.pdf"><button class="w3-button w3-orange w3-padding-large w3-section">
-        <i class="fa fa-download"></i> Curriculum Vitæ
-        </button></a>
-    </div>
-    <h6 class="w3-padding-0 w3-text-light-grey w3-center">or</h3>
-    <div class="w3-center">
-      <a href="resume.pdf"><button class="w3-button w3-orange w3-padding-large w3-section">
-      <i class="fa fa-download"></i> Resume
-      </button></a>
-  </div>
-
-  <!-- End About Section -->
-  </div>
-
-  <!-- Contact Section -->
-  <div class="w3-padding-32 w3-content w3-text-grey" id="contact">
-    <h2 class="w3-text-light-grey">Contact</h2>
-    <hr style="width:200px" class="w3-opacity">
-
-    <h6>chanattan[dot]sok(at)ens-rennes{dot}fr</h6>
-  <!-- End Contact Section -->
-  </div>
-
-  <a href="croco/index.html" class="w3-bar-item w3-button w3-padding-large w3-hover-black w3-text-light-grey w3-right">
-    <p>> My friends through a croco-loop.</p>
-  </a>
-  
-    <!-- Footer -->
-  <footer class="w3-content w3-padding-64 w3-text-grey w3-xlarge w3-center">
-    <p class="w3-medium">Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank" class="w3-hover-text-green">w3.css</a></p>
-  <!-- End footer -->
   </footer>
-
-<!-- END PAGE CONTENT -->
 </div>
 
 </body>
