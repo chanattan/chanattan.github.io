@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Network Analytics | France</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto 1fr auto;
+            min-height: 100vh;
+            max-width: 100vw;
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-bottom: 2px solid #ff6b35;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d084;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .sidebar {
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .filter-section {
+            margin-bottom: 32px;
+        }
+        
+        .filter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff6b35;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ccc;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .range-input {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #404040;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+        }
+        
+        .range-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+        }
+        
+        .range-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .range-value {
+            color: #ff6b35;
+            font-weight: 600;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .checkbox-item:hover {
+            background: #2a2a2a;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ff6b35;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-content {
+            background: #0f0f0f;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #graph-container {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .graph-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 200px;
+            z-index: 1000;
+        }
+        
+        .overlay-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ff6b35;
+            margin-bottom: 12px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer {
+            grid-column: 1 / -1;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #333;
+            border-top: 3px solid #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #333;
+                max-height: 300px;
+            }
+            
+            .main-content {
+                min-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="header">
+            <div>
+                <h1>
+                    <div class="logo-icon">🚄</div>
+                    Railway Network Analytics
+                </h1>
+            </div>
+            <div class="header-meta">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Live Data</span>
+                </div>
+                <span id="last-updated">Updated: Just now</span>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="filter-section">
+                <div class="filter-title">🎯 Network Filters</div>
+                
+                <div class="filter-group">
+                    <label>📁 Load Graph Data</label>
+                    <input type="file" class="filter-input" id="file-input" accept=".json" style="padding: 8px;">
+                    <div style="margin-top: 8px; font-size: 12px; color: #999;">
+                        Supports: NetworkX JSON, Plotly exports, Custom formats
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>City Population Threshold</label>
+                    <input type="range" class="filter-input range-input" id="population-range" 
+                           min="0" max="100000" step="5000" value="0">
+                    <div class="range-display">
+                        <span>0</span>
+                        <span class="range-value" id="population-value">0</span>
+                        <span>100k+</span>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>Minimum Connections</label>
+                    <input type="range" class="filter-input range-input" id="connections-range" 
+                           min="1" max="20" value="1">
+                    <div class="range-display">
+                        <span>1</span>
+                        <span class="range-value" id="connections-value">1</span>
+                        <span>20+</span>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>Minimum Daily Trips</label>
+                    <input type="range" class="filter-input range-input" id="trips-range" 
+                           min="1" max="100" value="1">
+                    <div class="range-display">
+                        <span>1</span>
+                        <span class="range-value" id="trips-value">1</span>
+                        <span>100+</span>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>Maximum Distance (km)</label>
+                    <input type="range" class="filter-input range-input" id="distance-range" 
+                           min="0" max="1000" step="50" value="1000">
+                    <div class="range-display">
+                        <span>0</span>
+                        <span class="range-value" id="distance-value">1000</span>
+                        <span>1000+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">🏙️ City Types</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="major-cities" checked>
+                        <span>Major Cities (100k+)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="medium-cities" checked>
+                        <span>Medium Cities (50-100k)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="small-cities" checked>
+                        <span>Small Cities (<50k)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">📊 Visualization</div>
+                
+                <div class="filter-group">
+                    <label>Layout Algorithm</label>
+                    <select class="filter-input" id="layout-select">
+                        <option value="geographic">Geographic</option>
+                        <option value="force">Force-directed</option>
+                        <option value="hierarchical">Hierarchical</option>
+                        <option value="circular">Circular</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Edge Weight by</label>
+                    <select class="filter-input" id="edge-weight">
+                        <option value="trips">Daily Trips</option>
+                        <option value="distance">Distance</option>
+                        <option value="duration">Travel Time</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <button class="btn" onclick="applyFilters()">Apply Filters</button>
+                <br><br>
+                <button class="btn btn-secondary" onclick="resetFilters()">Reset All</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="graph-container"></div>
+            
+            <div class="graph-overlay">
+                <div class="overlay-title">Network Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="visible-cities">156</span>
+                        <span class="stat-label">Cities</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="visible-connections">342</span>
+                        <span class="stat-label">Routes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-trips">1,247</span>
+                        <span class="stat-label">Daily Trips</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="avg-distance">125</span>
+                        <span class="stat-label">Avg Dist (km)</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div>© 2024 Railway Analytics Dashboard | Powered by French Railway Data</div>
+            <div>Last update: <span id="data-timestamp">2024-08-22 14:30:00</span></div>
+        </footer>
+    </div>
+
+    <script>
+        let currentFilters = {
+            minPopulation: 0,
+            minConnections: 1,
+            minTrips: 1,
+            maxDistance: 1000,
+            cityTypes: ['major', 'medium', 'small'],
+            layout: 'geographic',
+            edgeWeight: 'trips'
+        };
+
+        let currentGraphData = null;
+
+        function filterData() {
+            if (!fullNetworkData) return { nodes: [], edges: [] };
+            
+            const filteredNodes = fullNetworkData.nodes.filter(node => 
+                node.population >= currentFilters.minPopulation &&
+                node.connections >= currentFilters.minConnections &&
+                currentFilters.cityTypes.includes(node.type)
+            );
+
+            const nodeIds = new Set(filteredNodes.map(n => n.id));
+
+            const filteredEdges = fullNetworkData.edges.filter(edge =>
+                nodeIds.has(edge.source) &&
+                nodeIds.has(edge.target) &&
+                edge.trips >= currentFilters.minTrips &&
+                edge.distance <= currentFilters.maxDistance
+            );
+
+            return { nodes: filteredNodes, edges: filteredEdges };
+        }
+
+        // Function to load graph data from JSON file
+        async function loadGraphData(file = null) {
+            try {
+                showLoading();
+                
+                let data;
+                if (file) {
+                    // Load from uploaded file
+                    const text = await file.text();
+                    data = JSON.parse(text);
+                } else {
+                    // Load from default file (you can change this path)
+                    const response = await fetch('railway_network_data.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    data = await response.json();
+                }
+                
+                // Process the loaded data to ensure it has the right format
+                fullNetworkData = processGraphData(data);
+                
+                console.log(`Loaded ${fullNetworkData.nodes.length} nodes and ${fullNetworkData.edges.length} edges`);
+                
+                // Initialize the graph with loaded data
+                initializeGraph();
+                updateStatistics();
+                
+            } catch (error) {
+                console.error('Error loading graph data:', error);
+                
+                // Fallback to demo data if loading fails
+                console.log('Loading demo data as fallback...');
+                fullNetworkData = createDemoData();
+                initializeGraph();
+                updateStatistics();
+                
+                alert('Could not load graph data. Using demo data. Please upload your railway_network_data.json file.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Process the loaded data to ensure compatibility
+        function processGraphData(rawData) {
+            let nodes = [];
+            let edges = [];
+
+            if (rawData.nodes && rawData.edges) {
+                // Direct format with nodes and edges arrays
+                nodes = rawData.nodes;
+                edges = rawData.edges;
+            } else if (rawData.data && rawData.layout) {
+                // Plotly format - extract from traces
+                console.log('Converting from Plotly format...');
+                return convertPlotlyData(rawData);
+            } else if (rawData.elements) {
+                // Cytoscape format
+                console.log('Converting from Cytoscape format...');
+                return convertCytoscapeData(rawData);
+            } else {
+                // Try to extract from NetworkX-style export
+                console.log('Processing NetworkX-style data...');
+                return processNetworkXData(rawData);
+            }
+
+            // Ensure nodes have required properties
+            nodes = nodes.map(node => ({
+                id: node.id || node.code || node.insee,
+                name: node.name || node.label || node.id,
+                x: node.x || node.lon || node.longitude || 0,
+                y: node.y || node.lat || node.latitude || 0,
+                connections: node.connections || node.degree || 0,
+                population: node.population || 50000, // default population
+                type: classifyNodeType(node.population || 50000),
+                ...node // keep all other properties
+            }));
+
+            // Ensure edges have required properties
+            edges = edges.map(edge => ({
+                source: edge.source || edge.from || edge.start,
+                target: edge.target || edge.to || edge.end,
+                distance: edge.distance || edge.weight || 100,
+                duration: edge.duration || edge.time || 60,
+                trips: edge.trips || edge.nb_trips || edge.frequency || 5,
+                route_type: edge.route_type || 'regional',
+                ...edge // keep all other properties
+            }));
+
+            return { nodes, edges };
+        }
+
+        // Convert Plotly graph data
+        function convertPlotlyData(plotlyData) {
+            // This would extract nodes and edges from Plotly traces
+            // Implementation depends on your specific Plotly export format
+            console.log('Plotly conversion not fully implemented - using demo data');
+            return createDemoData();
+        }
+
+        // Process NetworkX-style JSON export
+        function processNetworkXData(data) {
+            const nodes = [];
+            const edges = [];
+
+            // Handle NetworkX node-link format
+            if (data.nodes && data.links) {
+                // Standard NetworkX export format
+                nodes = data.nodes.map(node => ({
+                    id: node.id,
+                    name: node.name || node.id,
+                    x: node.geometry?.x || node.x || 0,
+                    y: node.geometry?.y || node.y || 0,
+                    connections: node.connections || 0,
+                    population: node.population || 50000,
+                    type: classifyNodeType(node.population || 50000),
+                    ...node
+                }));
+
+                data.links.forEach(link => {
+                    edges.push({
+                        source: link.source,
+                        target: link.target,
+                        distance: link.distance || 100,
+                        duration: link.duration || 60,
+                        trips: link.nb_trips || link.trips || 5,
+                        route_type: 'regional',
+                        ...link
+                    });
+                });
+            }
+
+            return { nodes, edges };
+        }
+
+        // Classify node type based on population
+        function classifyNodeType(population) {
+            if (population >= 100000) return 'major';
+            if (population >= 50000) return 'medium';
+            return 'small';
+        }
+
+        // Create demo data as fallback
+        function createDemoData() {
+            return {
+                nodes: [
+                    {id: '75056', name: 'Paris', x: 2.3522, y: 48.8566, connections: 15, population: 2161000, type: 'major'},
+                    {id: '69123', name: 'Lyon', x: 4.8357, y: 45.7640, connections: 12, population: 515695, type: 'major'},
+                    {id: '13055', name: 'Marseille', x: 5.3698, y: 43.2965, connections: 8, population: 861635, type: 'major'},
+                    {id: '59350', name: 'Lille', x: 3.0573, y: 50.6292, connections: 9, population: 232787, type: 'medium'},
+                    {id: '33063', name: 'Bordeaux', x: -0.5792, y: 44.8378, connections: 7, population: 254436, type: 'medium'}
+                ],
+                edges: [
+                    {source: '75056', target: '69123', distance: 462, duration: 120, trips: 45, route_type: 'high_speed'},
+                    {source: '69123', target: '13055', distance: 314, duration: 90, trips: 32, route_type: 'high_speed'},
+                    {source: '75056', target: '59350', distance: 225, duration: 60, trips: 55, route_type: 'high_speed'},
+                    {source: '75056', target: '33063', distance: 568, duration: 150, trips: 35, route_type: 'high_speed'}
+                ]
+            };
+        }
+
+        // Initialize the app
+        function initializeApp() {
+            setupEventListeners();
+            loadGraphData(); // This will load default data or show demo data
+        }
+
+        function setupEventListeners() {
+            // File input for loading graph data
+            document.getElementById('file-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    loadGraphData(file);
+                }
+            });
+
+            // Range input event listeners
+            const rangeInputs = ['population-range', 'connections-range', 'trips-range', 'distance-range'];
+            rangeInputs.forEach(id => {
+                const input = document.getElementById(id);
+                const valueDisplay = document.getElementById(id.replace('-range', '-value'));
+                
+                input.addEventListener('input', function() {
+                    valueDisplay.textContent = this.value;
+                });
+            });
+
+            // Checkbox listeners
+            const checkboxes = ['major-cities', 'medium-cities', 'small-cities'];
+            checkboxes.forEach(id => {
+                document.getElementById(id).addEventListener('change', updateCityTypeFilters);
+            });
+        }
+
+        function updateCityTypeFilters() {
+            const types = [];
+            if (document.getElementById('major-cities').checked) types.push('major');
+            if (document.getElementById('medium-cities').checked) types.push('medium');
+            if (document.getElementById('small-cities').checked) types.push('small');
+            currentFilters.cityTypes = types;
+        }
+
+        function initializeGraph() {
+            if (!fullNetworkData) return;
+            
+            // Apply initial filters and create graph
+            applyFilters();
+        }
+
+        function updateStatistics() {
+            if (!fullNetworkData) return;
+
+            const filteredData = filterData();
+            
+            document.getElementById('visible-cities').textContent = filteredData.nodes.length;
+            document.getElementById('visible-connections').textContent = filteredData.edges.length;
+            
+            const totalTrips = filteredData.edges.reduce((sum, edge) => sum + edge.trips, 0);
+            document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
+            
+            const avgDistance = filteredData.edges.length > 0 ? 
+                Math.round(filteredData.edges.reduce((sum, edge) => sum + edge.distance, 0) / filteredData.edges.length) : 0;
+            document.getElementById('avg-distance').textContent = avgDistance;
+
+            // Update timestamp
+            document.getElementById('last-updated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        function applyFilters() {
+            if (!fullNetworkData) {
+                console.log('No data loaded yet');
+                return;
+            }
+
+            showLoading();
+
+            // Update filters from UI
+            currentFilters.minPopulation = parseInt(document.getElementById('population-range').value);
+            currentFilters.minConnections = parseInt(document.getElementById('connections-range').value);
+            currentFilters.minTrips = parseInt(document.getElementById('trips-range').value);
+            currentFilters.maxDistance = parseInt(document.getElementById('distance-range').value);
+            currentFilters.layout = document.getElementById('layout-select').value;
+            currentFilters.edgeWeight = document.getElementById('edge-weight').value;
+
+            updateCityTypeFilters();
+
+            // Filter data and create graph
+            const filteredData = filterData();
+            const graphConfig = createGraph(filteredData);
+
+            // Update the graph
+            Plotly.react('graph-container', graphConfig.data, graphConfig.layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d']
+            });
+
+            // Update statistics
+            updateStatistics();
+
+            setTimeout(hideLoading, 500);
+        }
+
+        function resetFilters() {
+            // Reset UI elements
+            document.getElementById('population-range').value = 0;
+            document.getElementById('connections-range').value = 1;
+            document.getElementById('trips-range').value = 1;
+            document.getElementById('distance-range').value = 1000;
+            document.getElementById('layout-select').value = 'geographic';
+            document.getElementById('edge-weight').value = 'trips';
+            
+            // Reset checkboxes
+            document.getElementById('major-cities').checked = true;
+            document.getElementById('medium-cities').checked = true;
+            document.getElementById('small-cities').checked = true;
+
+            // Update range displays
+            document.getElementById('population-value').textContent = '0';
+            document.getElementById('connections-value').textContent = '1';
+            document.getElementById('trips-value').textContent = '1';
+            document.getElementById('distance-value').textContent = '1000';
+
+            // Reset filters and apply
+            currentFilters = {
+                minPopulation: 0,
+                minConnections: 1,
+                minTrips: 1,
+                maxDistance: 1000,
+                cityTypes: ['major', 'medium', 'small'],
+                layout: 'geographic',
+                edgeWeight: 'trips'
+            };
+
+            applyFilters();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        function createGraph(data) {
+            const colorScale = {
+                high_speed: '#ff6b35',
+                intercity: '#f7931e', 
+                regional: '#ff9f1c'
+            };
+
+            // Prepare edge traces
+            const edgeTraces = {};
+            const edgeHoverTraces = {};
+
+            data.edges.forEach(edge => {
+                const source = data.nodes.find(n => n.id === edge.source);
+                const target = data.nodes.find(n => n.id === edge.target);
+                const routeType = edge.route_type || 'regional';
+
+                if (source && target) {
+                    if (!edgeTraces[routeType]) {
+                        edgeTraces[routeType] = { x: [], y: [], hover_x: [], hover_y: [], hover_text: [] };
+                    }
+
+                    // Edge lines
+                    edgeTraces[routeType].x.push(source.x, target.x, null);
+                    edgeTraces[routeType].y.push(source.y, target.y, null);
+
+                    // Hover points
+                    const mid_x = (source.x + target.x) / 2;
+                    const mid_y = (source.y + target.y) / 2;
+                    edgeTraces[routeType].hover_x.push(mid_x);
+                    edgeTraces[routeType].hover_y.push(mid_y);
+
+                    const weight = currentFilters.edgeWeight === 'trips' ? edge.trips :
+                                 currentFilters.edgeWeight === 'distance' ? edge.distance : edge.duration;
+
+                    const hoverText = `<b>${source.name} ↔ ${target.name}</b><br>` +
+                                    `Type: ${routeType.replace('_', ' ').toUpperCase()}<br>` +
+                                    `Distance: ${edge.distance} km<br>` +
+                                    `Duration: ${edge.duration} min<br>` +
+                                    `Daily trips: ${edge.trips}<br>` +
+                                    `Weight: ${weight}`;
+                    edgeTraces[routeType].hover_text.push(hoverText);
+                }
+            });
+
+            const traces = [];
+
+            // Add edge traces
+            Object.keys(edgeTraces).forEach(routeType => {
+                const trace = edgeTraces[routeType];
+                const lineWidth = currentFilters.edgeWeight === 'trips' ? 
+                    trace.hover_text.length > 0 ? Math.max(1, Math.min(8, trace.hover_text.length / 5)) : 2 : 2;
+
+                traces.push({
+                    x: trace.x,
+                    y: trace.y,
+                    mode: 'lines',
+                    line: { 
+                        width: lineWidth, 
+                        color: colorScale[routeType] 
+                    },
+                    hoverinfo: 'none',
+                    showlegend: true,
+                    name: routeType.replace('_', ' ').toUpperCase(),
+                    type: 'scatter'
+                });
+
+                // Add hover points for edges
+                traces.push({
+                    x: trace.hover_x,
+                    y: trace.hover_y,
+                    mode: 'markers',
+                    marker: { size: 0.5, color: 'rgba(0,0,0,0)' },
+                    text: trace.hover_text,
+                    hovertemplate: '%{text}<extra></extra>',
+                    hoverinfo: 'text',
+                    showlegend: false,
+                    type: 'scatter'
+                });
+            });
+
+            // Prepare node traces
+            const nodeTracesByType = {};
+            data.nodes.forEach(node => {
+                if (!nodeTracesByType[node.type]) {
+                    nodeTracesByType[node.type] = {
+                        x: [], y: [], text: [], hovertext: [], colors: []
+                    };
+                }
+
+                const trace = nodeTracesByType[node.type];
+                trace.x.push(node.x);
+                trace.y.push(node.y);
+                trace.text.push(node.name);
+                trace.colors.push(node.connections);
+
+                const hoverText = `<b>${node.name}</b><br>` +
+                                `Population: ${node.population.toLocaleString()}<br>` +
+                                `Connections: ${node.connections}<br>` +
+                                `Type: ${node.type}`;
+                trace.hovertext.push(hoverText);
+            });
+
+            // Add node traces
+            const nodeColors = { major: '#ffffff', medium: '#cccccc', small: '#999999' };
+            const nodeSizes = { major: 20, medium: 15, small: 12 };
+
+            Object.keys(nodeTracesByType).forEach(nodeType => {
+                const trace = nodeTracesByType[nodeType];
+                traces.push({
+                    x: trace.x,
+                    y: trace.y,
+                    mode: 'markers+text',
+                    marker: {
+                        size: nodeSizes[nodeType],
+                        color: nodeColors[nodeType],
+                        line: { width: 2, color: '#ff6b35' }
+                    },
+                    text: trace.text,
+                    textposition: "middle center",
+                    textfont: { size: 9, color: "#000000", family: "Arial Black" },
+                    hoverinfo: 'text',
+                    hovertext: trace.hovertext,
+                    showlegend: true,
+                    name: `${nodeType} cities`.toUpperCase(),
+                    type: 'scatter'
+                });
+            });
+
+            const layout = {
+                title: {
+                    text: 'French Railway Network - Professional Analytics',
+                    font: { size: 18, color: '#ffffff' },
+                    x: 0.5
+                },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    x: 0,
+                    y: -0.1,
+                    font: { color: '#ffffff', size: 11 }
+                },
+                hovermode: ''
+            }
+        }
