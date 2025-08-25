@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Railway Network Analytics | France</title>
+    <title>European Railway Network Analytics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
     <style>
         * {
@@ -81,6 +81,19 @@
             animation: pulse 2s infinite;
         }
         
+        .country-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .country-flag {
+            width: 20px;
+            height: 15px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -138,6 +151,13 @@
             outline: none;
             border-color: #ff6b35;
             box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .country-select {
+            background: #2a2a2a;
+            border: 2px solid #ff6b35;
+            color: #ffffff;
+            font-weight: 600;
         }
         
         .range-input {
@@ -268,6 +288,9 @@
             font-weight: 600;
             color: #ff6b35;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .stats-grid {
@@ -336,6 +359,16 @@
             animation: spin 1s linear infinite;
         }
         
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -368,39 +401,46 @@
         <header class="header">
             <div>
                 <h1>
-                    <div class="logo-icon">🚄</div>
-                    Railway Network Analytics
+                    Fairness in Railway Networks – Tool
                 </h1>
             </div>
             <div class="header-meta">
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    <span>Live Data</span>
+                <div class="country-selector">
+                    <span class="country-flag" id="current-flag">🇫🇷</span>
+                    <span id="current-country">France</span>
                 </div>
-                <span id="last-updated">Updated: Just now</span>
             </div>
         </header>
 
         <aside class="sidebar">
             <div class="filter-section">
-                <div class="filter-title">🎯 Network Filters</div>
+                <div class="filter-title">Select Country</div>
                 
                 <div class="filter-group">
-                    <label>📁 Load Graph Data</label>
-                    <input type="file" class="filter-input" id="file-input" accept=".json" style="padding: 8px;">
-                    <div style="margin-top: 8px; font-size: 12px; color: #999;">
-                        Supports: NetworkX JSON, Plotly exports, Custom formats
-                    </div>
+                    <label>Railway Network</label>
+                    <select class="filter-input country-select" id="country-select">
+                        <option value="france">🇫🇷 France</option>
+                        <option value="italy">🇮🇹 Italy</option>
+                        <option value="spain">🇪🇸 Spain</option>
+                        <option value="uk">🇬🇧 United Kingdom</option>
+                        <option value="germany">🇩🇪 Germany</option>
+                    </select>
                 </div>
+
+                <div id="error-container"></div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">Network Filters</div>
 
                 <div class="filter-group">
                     <label>City Population Threshold</label>
                     <input type="range" class="filter-input range-input" id="population-range" 
-                           min="0" max="100000" step="5000" value="0">
+                           min="0" max="2000000" step="50000" value="0">
                     <div class="range-display">
                         <span>0</span>
                         <span class="range-value" id="population-value">0</span>
-                        <span>100k+</span>
+                        <span>2M+</span>
                     </div>
                 </div>
 
@@ -439,25 +479,25 @@
             </div>
 
             <div class="filter-section">
-                <div class="filter-title">🏙️ City Types</div>
+                <div class="filter-title">City Types</div>
                 <div class="checkbox-group">
                     <label class="checkbox-item">
                         <input type="checkbox" id="major-cities" checked>
-                        <span>Major Cities (100k+)</span>
+                        <span>Major Cities</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" id="medium-cities" checked>
-                        <span>Medium Cities (50-100k)</span>
+                        <span>Medium Cities</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" id="small-cities" checked>
-                        <span>Small Cities (<50k)</span>
+                        <span>Small Cities</span>
                     </label>
                 </div>
             </div>
 
             <div class="filter-section">
-                <div class="filter-title">📊 Visualization</div>
+                <div class="filter-title">Visualization</div>
                 
                 <div class="filter-group">
                     <label>Layout Algorithm</label>
@@ -490,22 +530,24 @@
             <div id="graph-container"></div>
             
             <div class="graph-overlay">
-                <div class="overlay-title">Network Statistics</div>
+                <div class="overlay-title">
+                    <span id="country-stats-title">Network Statistics</span>
+                </div>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <span class="stat-value" id="visible-cities">156</span>
+                        <span class="stat-value" id="visible-cities">-</span>
                         <span class="stat-label">Cities</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value" id="visible-connections">342</span>
+                        <span class="stat-value" id="visible-connections">-</span>
                         <span class="stat-label">Routes</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value" id="total-trips">1,247</span>
+                        <span class="stat-value" id="total-trips">-</span>
                         <span class="stat-label">Daily Trips</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value" id="avg-distance">125</span>
+                        <span class="stat-value" id="avg-distance">-</span>
                         <span class="stat-label">Avg Dist (km)</span>
                     </div>
                 </div>
@@ -513,12 +555,19 @@
         </main>
 
         <footer class="footer">
-            <div>© 2024 Railway Analytics Dashboard | Powered by French Railway Data</div>
-            <div>Last update: <span id="data-timestamp">2024-08-22 14:30:00</span></div>
+            <div>Last update: <span id="data-timestamp">24/08/2025</span></div>
         </footer>
     </div>
 
     <script>
+        const COUNTRY_CONFIG = {
+            france: { name: 'France', flag: '🇫🇷', file: 'france_railway_network.json' },
+            italy: { name: 'Italy', flag: '🇮🇹', file: 'italy_railway_network.json' },
+            spain: { name: 'Spain', flag: '🇪🇸', file: 'spain_railway_network.json' },
+            uk: { name: 'United Kingdom', flag: '🇬🇧', file: 'uk_railway_network.json' },
+            germany: { name: 'Germany', flag: '🇩🇪', file: 'germany_railway_network.json' }
+        };
+
         let currentFilters = {
             minPopulation: 0,
             minConnections: 1,
@@ -529,202 +578,222 @@
             edgeWeight: 'trips'
         };
 
-        let currentGraphData = null;
+        let fullNetworkData = null;
+        let currentCountry = 'france';
 
-        function filterData() {
-            if (!fullNetworkData) return { nodes: [], edges: [] };
-            
-            const filteredNodes = fullNetworkData.nodes.filter(node => 
-                node.population >= currentFilters.minPopulation &&
-                node.connections >= currentFilters.minConnections &&
-                currentFilters.cityTypes.includes(node.type)
-            );
-
-            const nodeIds = new Set(filteredNodes.map(n => n.id));
-
-            const filteredEdges = fullNetworkData.edges.filter(edge =>
-                nodeIds.has(edge.source) &&
-                nodeIds.has(edge.target) &&
-                edge.trips >= currentFilters.minTrips &&
-                edge.distance <= currentFilters.maxDistance
-            );
-
-            return { nodes: filteredNodes, edges: filteredEdges };
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
         }
 
-        // Function to load graph data from JSON file
-        async function loadGraphData(file = null) {
+        function updateCountryDisplay(countryCode) {
+            const config = COUNTRY_CONFIG[countryCode];
+            if (config) {
+                document.getElementById('current-flag').textContent = config.flag;
+                document.getElementById('current-country').textContent = config.name;
+                document.getElementById('country-stats-title').textContent = `${config.name} Statistics`;
+            }
+        }
+
+        async function loadCountryData(countryCode) {
             try {
                 showLoading();
                 
-                let data;
-                if (file) {
-                    // Load from uploaded file
-                    const text = await file.text();
-                    data = JSON.parse(text);
-                } else {
-                    // Load from default file (you can change this path)
-                    const response = await fetch('railway_network_data.json');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    data = await response.json();
+                const config = COUNTRY_CONFIG[countryCode];
+                if (!config) {
+                    throw new Error(`Unknown country: ${countryCode}`);
+                }
+
+                const response = await fetch(`data/${config.file}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${config.name} data: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.nodes || !data.edges) {
+                    throw new Error(`Invalid data format for ${config.name}`);
+                }
+
+                fullNetworkData = data;
+                currentCountry = countryCode;
+                
+                updateCountryDisplay(countryCode);
+                
+                // Update data timestamp if available
+                if (data.metadata && data.metadata.export_date) {
+                    const date = new Date(data.metadata.export_date);
+                    document.getElementById('data-timestamp').textContent = date.toLocaleString();
                 }
                 
-                // Process the loaded data to ensure it has the right format
-                fullNetworkData = processGraphData(data);
+                console.log(`Loaded ${config.name}: ${data.nodes.length} nodes, ${data.edges.length} edges`);
                 
-                console.log(`Loaded ${fullNetworkData.nodes.length} nodes and ${fullNetworkData.edges.length} edges`);
-                
-                // Initialize the graph with loaded data
                 initializeGraph();
                 updateStatistics();
                 
             } catch (error) {
-                console.error('Error loading graph data:', error);
+                console.error('Error loading country data:', error);
+                showError(`Failed to load ${COUNTRY_CONFIG[countryCode]?.name || countryCode} data. Please try another country.`);
                 
-                // Fallback to demo data if loading fails
-                console.log('Loading demo data as fallback...');
-                fullNetworkData = createDemoData();
-                initializeGraph();
-                updateStatistics();
+                // Don't fall back to demo data for country-specific loading
+                fullNetworkData = null;
+                clearGraph();
                 
-                alert('Could not load graph data. Using demo data. Please upload your railway_network_data.json file.');
             } finally {
                 hideLoading();
             }
         }
 
-        // Process the loaded data to ensure compatibility
-        function processGraphData(rawData) {
-            let nodes = [];
-            let edges = [];
-
-            if (rawData.nodes && rawData.edges) {
-                // Direct format with nodes and edges arrays
-                nodes = rawData.nodes;
-                edges = rawData.edges;
-            } else if (rawData.data && rawData.layout) {
-                // Plotly format - extract from traces
-                console.log('Converting from Plotly format...');
-                return convertPlotlyData(rawData);
-            } else if (rawData.elements) {
-                // Cytoscape format
-                console.log('Converting from Cytoscape format...');
-                return convertCytoscapeData(rawData);
-            } else {
-                // Try to extract from NetworkX-style export
-                console.log('Processing NetworkX-style data...');
-                return processNetworkXData(rawData);
-            }
-
-            // Ensure nodes have required properties
-            nodes = nodes.map(node => ({
-                id: node.id || node.code || node.insee,
-                name: node.name || node.label || node.id,
-                x: node.x || node.lon || node.longitude || 0,
-                y: node.y || node.lat || node.latitude || 0,
-                connections: node.connections || node.degree || 0,
-                population: node.population || 50000, // default population
-                type: classifyNodeType(node.population || 50000),
-                ...node // keep all other properties
-            }));
-
-            // Ensure edges have required properties
-            edges = edges.map(edge => ({
-                source: edge.source || edge.from || edge.start,
-                target: edge.target || edge.to || edge.end,
-                distance: edge.distance || edge.weight || 100,
-                duration: edge.duration || edge.time || 60,
-                trips: edge.trips || edge.nb_trips || edge.frequency || 5,
-                route_type: edge.route_type || 'regional',
-                ...edge // keep all other properties
-            }));
-
-            return { nodes, edges };
+        function clearGraph() {
+            const container = document.getElementById('graph-container');
+            container.innerHTML = '';
+            
+            // Reset statistics
+            document.getElementById('visible-cities').textContent = '-';
+            document.getElementById('visible-connections').textContent = '-';
+            document.getElementById('total-trips').textContent = '-';
+            document.getElementById('avg-distance').textContent = '-';
         }
 
-        // Convert Plotly graph data
-        function convertPlotlyData(plotlyData) {
-            // This would extract nodes and edges from Plotly traces
-            // Implementation depends on your specific Plotly export format
-            console.log('Plotly conversion not fully implemented - using demo data');
-            return createDemoData();
-        }
-
-        // Process NetworkX-style JSON export
-        function processNetworkXData(data) {
-            const nodes = [];
-            const edges = [];
-
-            // Handle NetworkX node-link format
-            if (data.nodes && data.links) {
-                // Standard NetworkX export format
-                nodes = data.nodes.map(node => ({
-                    id: node.id,
-                    name: node.name || node.id,
-                    x: node.geometry?.x || node.x || 0,
-                    y: node.geometry?.y || node.y || 0,
-                    connections: node.connections || 0,
-                    population: node.population || 50000,
-                    type: classifyNodeType(node.population || 50000),
-                    ...node
-                }));
-
-                data.links.forEach(link => {
-                    edges.push({
-                        source: link.source,
-                        target: link.target,
-                        distance: link.distance || 100,
-                        duration: link.duration || 60,
-                        trips: link.nb_trips || link.trips || 5,
-                        route_type: 'regional',
-                        ...link
+        function filterData() {
+    if (!fullNetworkData) return { nodes: [], edges: [] };
+    
+    const filteredNodes = fullNetworkData.nodes.filter(node =>
+        node.population >= currentFilters.minPopulation &&
+        node.connections >= currentFilters.minConnections &&
+        currentFilters.cityTypes.includes(node.type)
+    );
+    
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
+    const removedNodeIds = new Set(
+        fullNetworkData.nodes
+            .filter(node => !nodeIds.has(node.id))
+            .map(n => n.id)
+    );
+    
+    // Créer un graphe d'adjacence pour navigation facile
+    const adjacencyMap = new Map();
+    fullNetworkData.edges.forEach(edge => {
+        if (!adjacencyMap.has(edge.source)) adjacencyMap.set(edge.source, []);
+        if (!adjacencyMap.has(edge.target)) adjacencyMap.set(edge.target, []);
+        
+        adjacencyMap.get(edge.source).push({
+            nodeId: edge.target,
+            distance: edge.distance,
+            trips: edge.trips
+        });
+        adjacencyMap.get(edge.target).push({
+            nodeId: edge.source,
+            distance: edge.distance,
+            trips: edge.trips
+        });
+    });
+    
+    // Fonction itérative (BFS) pour trouver tous les nœuds conservés accessibles
+    function findReachableKeptNodes(startNodeId) {
+        const reachableNodes = [];
+        const queue = [{
+            nodeId: startNodeId,
+            distance: 0,
+            minTrips: Infinity,
+            path: new Set([startNodeId])
+        }];
+        
+        while (queue.length > 0) {
+            const current = queue.shift();
+            const neighbors = adjacencyMap.get(current.nodeId) || [];
+            
+            for (const neighbor of neighbors) {
+                // Éviter les cycles
+                if (current.path.has(neighbor.nodeId)) continue;
+                
+                const newDistance = current.distance + neighbor.distance;
+                const newMinTrips = Math.min(current.minTrips, neighbor.trips);
+                const newPath = new Set([...current.path, neighbor.nodeId]);
+                
+                if (nodeIds.has(neighbor.nodeId)) {
+                    // Nœud conservé trouvé - ne pas l'ajouter au queue
+                    if (neighbor.nodeId !== startNodeId) { // Éviter self-loop
+                        reachableNodes.push({
+                            nodeId: neighbor.nodeId,
+                            totalDistance: newDistance,
+                            minTrips: newMinTrips
+                        });
+                    }
+                } else if (removedNodeIds.has(neighbor.nodeId)) {
+                    // Nœud supprimé : continuer le parcours
+                    queue.push({
+                        nodeId: neighbor.nodeId,
+                        distance: newDistance,
+                        minTrips: newMinTrips,
+                        path: newPath
                     });
-                });
+                }
             }
-
-            return { nodes, edges };
         }
+        
+        return reachableNodes;
+    }
+    
+    // Garder les arêtes directes entre nœuds conservés
+    const filteredEdges = fullNetworkData.edges.filter(edge =>
+        nodeIds.has(edge.source) &&
+        nodeIds.has(edge.target) &&
+        edge.trips >= currentFilters.minTrips &&
+        edge.distance <= currentFilters.maxDistance
+    );
+    
+    // Set pour éviter les doublons
+    const existingEdges = new Set();
+    filteredEdges.forEach(edge => {
+        const key = `${Math.min(edge.source, edge.target)}-${Math.max(edge.source, edge.target)}`;
+        existingEdges.add(key);
+    });
+    
+    // Pour chaque nœud conservé, trouver tous les autres nœuds conservés
+    // accessibles en passant par au moins un nœud supprimé
+    nodeIds.forEach(startNodeId => {
+        const reachableNodes = findReachableKeptNodes(startNodeId);
+        
+        reachableNodes.forEach(reachable => {
+            const key = `${Math.min(startNodeId, reachable.nodeId)}-${Math.max(startNodeId, reachable.nodeId)}`;
+            
+            // Éviter les doublons
+            if (!existingEdges.has(key)) {
+                const newEdge = {
+                    source: startNodeId,
+                    target: reachable.nodeId,
+                    distance: reachable.totalDistance,
+                    trips: reachable.minTrips
+                };
+                
+                // Vérifier que la nouvelle arête respecte les filtres
+                if (newEdge.trips >= currentFilters.minTrips && 
+                    newEdge.distance <= currentFilters.maxDistance) {
+                    filteredEdges.push(newEdge);
+                    existingEdges.add(key);
+                }
+            }
+        });
+    });
+    
+    return { nodes: filteredNodes, edges: filteredEdges };
+}
 
-        // Classify node type based on population
-        function classifyNodeType(population) {
-            if (population >= 100000) return 'major';
-            if (population >= 50000) return 'medium';
-            return 'small';
-        }
-
-        // Create demo data as fallback
-        function createDemoData() {
-            return {
-                nodes: [
-                    {id: '75056', name: 'Paris', x: 2.3522, y: 48.8566, connections: 15, population: 2161000, type: 'major'},
-                    {id: '69123', name: 'Lyon', x: 4.8357, y: 45.7640, connections: 12, population: 515695, type: 'major'},
-                    {id: '13055', name: 'Marseille', x: 5.3698, y: 43.2965, connections: 8, population: 861635, type: 'major'},
-                    {id: '59350', name: 'Lille', x: 3.0573, y: 50.6292, connections: 9, population: 232787, type: 'medium'},
-                    {id: '33063', name: 'Bordeaux', x: -0.5792, y: 44.8378, connections: 7, population: 254436, type: 'medium'}
-                ],
-                edges: [
-                    {source: '75056', target: '69123', distance: 462, duration: 120, trips: 45, route_type: 'high_speed'},
-                    {source: '69123', target: '13055', distance: 314, duration: 90, trips: 32, route_type: 'high_speed'},
-                    {source: '75056', target: '59350', distance: 225, duration: 60, trips: 55, route_type: 'high_speed'},
-                    {source: '75056', target: '33063', distance: 568, duration: 150, trips: 35, route_type: 'high_speed'}
-                ]
-            };
-        }
-
-        // Initialize the app
         function initializeApp() {
             setupEventListeners();
-            loadGraphData(); // This will load default data or show demo data
+            loadCountryData(currentCountry);
         }
 
         function setupEventListeners() {
-            // File input for loading graph data
-            document.getElementById('file-input').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    loadGraphData(file);
+            // Country selector
+            document.getElementById('country-select').addEventListener('change', function(e) {
+                const selectedCountry = e.target.value;
+                if (selectedCountry !== currentCountry) {
+                    loadCountryData(selectedCountry);
                 }
             });
 
@@ -735,7 +804,13 @@
                 const valueDisplay = document.getElementById(id.replace('-range', '-value'));
                 
                 input.addEventListener('input', function() {
-                    valueDisplay.textContent = this.value;
+                    let value = this.value;
+                    if (id === 'population-range' && parseInt(value) >= 1000000) {
+                        value = (parseInt(value) / 1000000).toFixed(1) + 'M';
+                    } else if (id === 'population-range' && parseInt(value) >= 1000) {
+                        value = (parseInt(value) / 1000).toFixed(0) + 'k';
+                    }
+                    valueDisplay.textContent = value;
                 });
             });
 
@@ -756,8 +831,6 @@
 
         function initializeGraph() {
             if (!fullNetworkData) return;
-            
-            // Apply initial filters and create graph
             applyFilters();
         }
 
@@ -775,9 +848,6 @@
             const avgDistance = filteredData.edges.length > 0 ? 
                 Math.round(filteredData.edges.reduce((sum, edge) => sum + edge.distance, 0) / filteredData.edges.length) : 0;
             document.getElementById('avg-distance').textContent = avgDistance;
-
-            // Update timestamp
-            document.getElementById('last-updated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
         }
 
         function showLoading() {
@@ -817,14 +887,11 @@
                 modeBarButtonsToRemove: ['pan2d', 'lasso2d']
             });
 
-            // Update statistics
             updateStatistics();
-
-            setTimeout(hideLoading, 500);
+            setTimeout(hideLoading, 300);
         }
 
         function resetFilters() {
-            // Reset UI elements
             document.getElementById('population-range').value = 0;
             document.getElementById('connections-range').value = 1;
             document.getElementById('trips-range').value = 1;
@@ -832,18 +899,15 @@
             document.getElementById('layout-select').value = 'geographic';
             document.getElementById('edge-weight').value = 'trips';
             
-            // Reset checkboxes
             document.getElementById('major-cities').checked = true;
             document.getElementById('medium-cities').checked = true;
             document.getElementById('small-cities').checked = true;
 
-            // Update range displays
             document.getElementById('population-value').textContent = '0';
             document.getElementById('connections-value').textContent = '1';
             document.getElementById('trips-value').textContent = '1';
             document.getElementById('distance-value').textContent = '1000';
 
-            // Reset filters and apply
             currentFilters = {
                 minPopulation: 0,
                 minConnections: 1,
@@ -857,9 +921,6 @@
             applyFilters();
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initializeApp);
-
         function createGraph(data) {
             const colorScale = {
                 high_speed: '#ff6b35',
@@ -867,25 +928,32 @@
                 regional: '#ff9f1c'
             };
 
+            const layoutData = calculateLayout(data, currentFilters.layout);
+            const traces = [];
+
             // Prepare edge traces
             const edgeTraces = {};
-            const edgeHoverTraces = {};
 
-            data.edges.forEach(edge => {
-                const source = data.nodes.find(n => n.id === edge.source);
-                const target = data.nodes.find(n => n.id === edge.target);
+            layoutData.edges.forEach(edge => {
+                const source = layoutData.nodes.find(n => n.id === edge.source);
+                const target = layoutData.nodes.find(n => n.id === edge.target);
                 const routeType = edge.route_type || 'regional';
 
                 if (source && target) {
                     if (!edgeTraces[routeType]) {
-                        edgeTraces[routeType] = { x: [], y: [], hover_x: [], hover_y: [], hover_text: [] };
+                        edgeTraces[routeType] = { 
+                            x: [], 
+                            y: [], 
+                            hover_x: [], 
+                            hover_y: [], 
+                            hover_text: [],
+                            weights: []
+                        };
                     }
 
-                    // Edge lines
                     edgeTraces[routeType].x.push(source.x, target.x, null);
                     edgeTraces[routeType].y.push(source.y, target.y, null);
 
-                    // Hover points
                     const mid_x = (source.x + target.x) / 2;
                     const mid_y = (source.y + target.y) / 2;
                     edgeTraces[routeType].hover_x.push(mid_x);
@@ -894,30 +962,27 @@
                     const weight = currentFilters.edgeWeight === 'trips' ? edge.trips :
                                  currentFilters.edgeWeight === 'distance' ? edge.distance : edge.duration;
 
+                    edgeTraces[routeType].weights.push(weight);
+
                     const hoverText = `<b>${source.name} ↔ ${target.name}</b><br>` +
                                     `Type: ${routeType.replace('_', ' ').toUpperCase()}<br>` +
                                     `Distance: ${edge.distance} km<br>` +
                                     `Duration: ${edge.duration} min<br>` +
-                                    `Daily trips: ${edge.trips}<br>` +
-                                    `Weight: ${weight}`;
+                                    `Daily trips: ${edge.trips}`;
                     edgeTraces[routeType].hover_text.push(hoverText);
                 }
             });
 
-            const traces = [];
-
             // Add edge traces
             Object.keys(edgeTraces).forEach(routeType => {
                 const trace = edgeTraces[routeType];
-                const lineWidth = currentFilters.edgeWeight === 'trips' ? 
-                    trace.hover_text.length > 0 ? Math.max(1, Math.min(8, trace.hover_text.length / 5)) : 2 : 2;
 
                 traces.push({
                     x: trace.x,
                     y: trace.y,
                     mode: 'lines',
                     line: { 
-                        width: lineWidth, 
+                        width: 2,
                         color: colorScale[routeType] 
                     },
                     hoverinfo: 'none',
@@ -926,12 +991,12 @@
                     type: 'scatter'
                 });
 
-                // Add hover points for edges
+                // Hover points for edges
                 traces.push({
                     x: trace.hover_x,
                     y: trace.hover_y,
                     mode: 'markers',
-                    marker: { size: 0.5, color: 'rgba(0,0,0,0)' },
+                    marker: { size: 8, color: 'rgba(0,0,0,0)', opacity: 0 },
                     text: trace.hover_text,
                     hovertemplate: '%{text}<extra></extra>',
                     hoverinfo: 'text',
@@ -940,12 +1005,12 @@
                 });
             });
 
-            // Prepare node traces
+            // Node traces
             const nodeTracesByType = {};
-            data.nodes.forEach(node => {
+            layoutData.nodes.forEach(node => {
                 if (!nodeTracesByType[node.type]) {
                     nodeTracesByType[node.type] = {
-                        x: [], y: [], text: [], hovertext: [], colors: []
+                        x: [], y: [], text: [], hovertext: [], sizes: []
                     };
                 }
 
@@ -953,18 +1018,16 @@
                 trace.x.push(node.x);
                 trace.y.push(node.y);
                 trace.text.push(node.name);
-                trace.colors.push(node.connections);
+                trace.sizes.push(Math.log(node.connections + 1) * 4 + 10);
 
                 const hoverText = `<b>${node.name}</b><br>` +
                                 `Population: ${node.population.toLocaleString()}<br>` +
                                 `Connections: ${node.connections}<br>` +
-                                `Type: ${node.type}`;
+                                `Type: ${node.type} city`;
                 trace.hovertext.push(hoverText);
             });
 
-            // Add node traces
             const nodeColors = { major: '#ffffff', medium: '#cccccc', small: '#999999' };
-            const nodeSizes = { major: 20, medium: 15, small: 12 };
 
             Object.keys(nodeTracesByType).forEach(nodeType => {
                 const trace = nodeTracesByType[nodeType];
@@ -973,24 +1036,26 @@
                     y: trace.y,
                     mode: 'markers+text',
                     marker: {
-                        size: nodeSizes[nodeType],
+                        size: trace.sizes,
                         color: nodeColors[nodeType],
-                        line: { width: 2, color: '#ff6b35' }
+                        line: { width: 2, color: '#ff6b35' },
+                        opacity: 0.9
                     },
                     text: trace.text,
                     textposition: "middle center",
-                    textfont: { size: 9, color: "#000000", family: "Arial Black" },
+                    textfont: { size: 8, color: "#000000", family: "Arial Black" },
                     hoverinfo: 'text',
                     hovertext: trace.hovertext,
+                    hovertemplate: '%{hovertext}<extra></extra>',
                     showlegend: true,
-                    name: `${nodeType} cities`.toUpperCase(),
+                    name: `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} Cities`,
                     type: 'scatter'
                 });
             });
 
             const layout = {
                 title: {
-                    text: 'French Railway Network - Professional Analytics',
+                    text: `${COUNTRY_CONFIG[currentCountry].name} Railway Network`,
                     font: { size: 18, color: '#ffffff' },
                     x: 0.5
                 },
@@ -999,8 +1064,146 @@
                     orientation: 'h',
                     x: 0,
                     y: -0.1,
-                    font: { color: '#ffffff', size: 11 }
+                    font: { color: '#ffffff', size: 11 },
+                    bgcolor: 'rgba(26, 26, 26, 0.8)',
+                    bordercolor: '#333',
+                    borderwidth: 1
                 },
-                hovermode: ''
+                hovermode: 'closest',
+                margin: { l: 40, r: 40, t: 60, b: 100 },
+                plot_bgcolor: '#0f0f0f',
+                paper_bgcolor: '#0f0f0f',
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    showticklabels: false,
+                    color: '#666'
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    showticklabels: false,
+                    color: '#666'
+                },
+                dragmode: 'pan'
+            };
+
+            return { data: traces, layout: layout };
+        }
+
+        function calculateLayout(data, layoutType) {
+            const nodes = [...data.nodes];
+            const edges = [...data.edges];
+
+            switch (layoutType) {
+                case 'geographic':
+                    return { nodes, edges };
+                case 'force':
+                    return calculateForceLayout(nodes, edges);
+                case 'hierarchical':
+                    return calculateHierarchicalLayout(nodes, edges);
+                case 'circular':
+                    return calculateCircularLayout(nodes, edges);
+                default:
+                    return { nodes, edges };
             }
         }
+
+        function calculateForceLayout(nodes, edges) {
+            const layoutNodes = nodes.map(node => ({ ...node, vx: 0, vy: 0 }));
+            const iterations = 50;
+            const k = Math.sqrt(400 / layoutNodes.length);
+
+            for (let iter = 0; iter < iterations; iter++) {
+                // Reset velocities
+                layoutNodes.forEach(node => {
+                    node.vx = 0;
+                    node.vy = 0;
+                });
+
+                // Repulsive forces
+                for (let i = 0; i < layoutNodes.length; i++) {
+                    for (let j = i + 1; j < layoutNodes.length; j++) {
+                        const dx = layoutNodes[i].x - layoutNodes[j].x;
+                        const dy = layoutNodes[i].y - layoutNodes[j].y;
+                        const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 0.01);
+                        const force = k * k / distance;
+
+                        const fx = (dx / distance) * force * 0.1;
+                        const fy = (dy / distance) * force * 0.1;
+
+                        layoutNodes[i].vx += fx;
+                        layoutNodes[i].vy += fy;
+                        layoutNodes[j].vx -= fx;
+                        layoutNodes[j].vy -= fy;
+                    }
+                }
+
+                // Attractive forces
+                edges.forEach(edge => {
+                    const source = layoutNodes.find(n => n.id === edge.source);
+                    const target = layoutNodes.find(n => n.id === edge.target);
+
+                    if (source && target) {
+                        const dx = target.x - source.x;
+                        const dy = target.y - source.y;
+                        const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 0.01);
+                        const force = distance * distance / k;
+
+                        const fx = (dx / distance) * force * 0.01;
+                        const fy = (dy / distance) * force * 0.01;
+
+                        source.vx += fx;
+                        source.vy += fy;
+                        target.vx -= fx;
+                        target.vy -= fy;
+                    }
+                });
+
+                // Apply velocities with damping
+                layoutNodes.forEach(node => {
+                    node.x += node.vx * 0.1;
+                    node.y += node.vy * 0.1;
+                });
+            }
+
+            return { nodes: layoutNodes, edges };
+        }
+
+        function calculateHierarchicalLayout(nodes, edges) {
+            const layoutNodes = nodes.map(node => ({ ...node }));
+            layoutNodes.sort((a, b) => b.connections - a.connections);
+
+            const levels = Math.ceil(Math.sqrt(layoutNodes.length));
+            const nodesPerLevel = Math.ceil(layoutNodes.length / levels);
+
+            layoutNodes.forEach((node, index) => {
+                const level = Math.floor(index / nodesPerLevel);
+                const positionInLevel = index % nodesPerLevel;
+                const levelWidth = Math.min(nodesPerLevel, layoutNodes.length - level * nodesPerLevel);
+
+                node.y = level * 3;
+                node.x = (positionInLevel - (levelWidth - 1) / 2) * 2;
+            });
+
+            return { nodes: layoutNodes, edges };
+        }
+
+        function calculateCircularLayout(nodes, edges) {
+            const layoutNodes = nodes.map(node => ({ ...node }));
+            const radius = Math.min(8, layoutNodes.length / 2);
+
+            layoutNodes.forEach((node, index) => {
+                const angle = (2 * Math.PI * index) / layoutNodes.length;
+                node.x = radius * Math.cos(angle);
+                node.y = radius * Math.sin(angle);
+            });
+
+            return { nodes: layoutNodes, edges };
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
