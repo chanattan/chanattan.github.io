@@ -272,7 +272,7 @@
         
         .graph-overlay {
             position: absolute;
-            top: 20px;
+            top: 40px;
             right: 20px;
             background: rgba(26, 26, 26, 0.95);
             backdrop-filter: blur(10px);
@@ -436,7 +436,7 @@
                 <div class="filter-group">
                     <label>City Population Threshold</label>
                     <input type="range" class="filter-input range-input" id="population-range" 
-                           min="0" max="2000000" step="50000" value="0">
+                           min="0" max="500000" step="10000" value="0">
                     <div class="range-display">
                         <span>0</span>
                         <span class="range-value" id="population-value">0</span>
@@ -658,105 +658,145 @@
             document.getElementById('avg-distance').textContent = '-';
         }
 
-function filterData() {
-    if (!fullNetworkData) return { nodes: [], edges: [] };
-    
-    const filteredNodes = fullNetworkData.nodes.filter(node =>
-        node.population >= currentFilters.minPopulation &&
-        node.connections >= currentFilters.minConnections &&
-        currentFilters.cityTypes.includes(node.type)
-    );
-    
-    const nodeIds = new Set(filteredNodes.map(n => n.id));
-    
-    // 1. Garder les arêtes directes entre nœuds conservés
-    let filteredEdges = fullNetworkData.edges.filter(edge =>
-        nodeIds.has(edge.source) &&
-        nodeIds.has(edge.target) &&
-        edge.trips >= currentFilters.minTrips &&
-        edge.distance <= currentFilters.maxDistance
-    );
-    
-    // 2. Algorithme de "contraction" itératif simple
-    // Tant qu'il y a des nœuds supprimés avec exactement 2 connexions, les "contracter"
-    let currentEdges = [...fullNetworkData.edges];
-    let nodesToRemove = new Set(
-        fullNetworkData.nodes
-            .filter(node => !nodeIds.has(node.id))
-            .map(n => n.id)
-    );
-    
-    let changed = true;
-    while (changed && nodesToRemove.size > 0) {
-        changed = false;
-        
-        // Créer un map de degré pour les nœuds supprimés
-        const removedNodeDegrees = new Map();
-        nodesToRemove.forEach(nodeId => {
-            const degree = currentEdges.filter(edge => 
-                edge.source === nodeId || edge.target === nodeId
-            ).length;
-            removedNodeDegrees.set(nodeId, degree);
-        });
-        
-        // Traiter les nœuds supprimés avec degré 2 (chaîne simple)
-        for (const [removedNodeId, degree] of removedNodeDegrees) {
-            if (degree === 2) {
-                const connectedEdges = currentEdges.filter(edge =>
-                    edge.source === removedNodeId || edge.target === removedNodeId
+        async function filterData() {
+            if (!fullNetworkData) return { nodes: [], edges: [] };
+            
+            const minPop = parseInt(currentFilters.minPopulation / 1000);
+            
+            // Construire le nom du fichier
+            const countryName = currentCountry || 'france'; // Fallback vers france si pas défini
+            const filename = minPop > 0 ? `data/${countryName}_railway_network_pop_threshold_${minPop}k.json` : `data/${countryName}_railway_network.json`;
+            
+            try {
+                // Charger le fichier approprié
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error(`Fichier non trouvé: ${filename}`);
+                }
+                
+                const networkData = await response.json();
+                
+                // Appliquer les filtres restants sur les données pré-filtrées
+                const filteredNodes = networkData.nodes.filter(node =>
+                    node.connections >= currentFilters.minConnections &&
+                    currentFilters.cityTypes.includes(node.type)
                 );
                 
-                if (connectedEdges.length === 2) {
-                    const edge1 = connectedEdges[0];
-                    const edge2 = connectedEdges[1];
-                    
-                    // Identifier les deux voisins
-                    const neighbor1 = edge1.source === removedNodeId ? edge1.target : edge1.source;
-                    const neighbor2 = edge2.source === removedNodeId ? edge2.target : edge2.source;
-                    
-                    // Créer une nouvelle arête directe
-                    const newEdge = {
-                        source: neighbor1,
-                        target: neighbor2,
-                        distance: edge1.distance + edge2.distance,
-                        trips: Math.min(edge1.trips, edge2.trips)
-                    };
-                    
-                    // Supprimer les anciennes arêtes et ajouter la nouvelle
-                    currentEdges = currentEdges.filter(edge => 
-                        edge.source !== removedNodeId && edge.target !== removedNodeId
-                    );
-                    currentEdges.push(newEdge);
-                    
-                    // Retirer ce nœud de la liste à supprimer
-                    nodesToRemove.delete(removedNodeId);
-                    changed = true;
-                    break; // Recommencer pour éviter les conflits
-                }
+                const nodeIds = new Set(filteredNodes.map(n => n.id));
+                const filteredEdges = networkData.edges.filter(edge =>
+                    nodeIds.has(edge.source) &&
+                    nodeIds.has(edge.target) &&
+                    edge.trips >= currentFilters.minTrips &&
+                    edge.distance <= currentFilters.maxDistance
+                );
+                
+                return { nodes: filteredNodes, edges: filteredEdges };
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement du fichier:', error);
+                
+                // Fallback : utiliser les données complètes avec filtrage simple
+                const filteredNodes = fullNetworkData.nodes.filter(node =>
+                    node.population >= currentFilters.minPopulation &&
+                    node.connections >= currentFilters.minConnections &&
+                    currentFilters.cityTypes.includes(node.type)
+                );
+                
+                const nodeIds = new Set(filteredNodes.map(n => n.id));
+                const filteredEdges = fullNetworkData.edges.filter(edge =>
+                    nodeIds.has(edge.source) &&
+                    nodeIds.has(edge.target) &&
+                    edge.trips >= currentFilters.minTrips &&
+                    edge.distance <= currentFilters.maxDistance
+                );
+                
+                return { nodes: filteredNodes, edges: filteredEdges };
             }
         }
-    }
-    
-    // 3. Filtrer le résultat final
-    const finalFilteredEdges = currentEdges.filter(edge =>
-        nodeIds.has(edge.source) &&
-        nodeIds.has(edge.target) &&
-        edge.trips >= currentFilters.minTrips &&
-        edge.distance <= currentFilters.maxDistance
-    );
-    
-    // 4. Déduplication
-    const edgeMap = new Map();
-    finalFilteredEdges.forEach(edge => {
-        const key = `${Math.min(edge.source, edge.target)}-${Math.max(edge.source, edge.target)}`;
-        if (!edgeMap.has(key) || edgeMap.get(key).distance > edge.distance) {
-            edgeMap.set(key, edge);
-        }
-    });
-    
-    return { nodes: filteredNodes, edges: Array.from(edgeMap.values()) };
-}
 
+        function filterDataTODO() {
+            if (!fullNetworkData) return { nodes: [], edges: [] };
+            
+            // 1. Filtrer les nœuds selon les critères
+            const filteredNodes = fullNetworkData.nodes.filter(node =>
+                node.population >= currentFilters.minPopulation &&
+                node.connections >= currentFilters.minConnections &&
+                currentFilters.cityTypes.includes(node.type)
+            );
+            
+            const keptNodeIds = new Set(filteredNodes.map(n => n.id));
+            
+            // 2. Commencer avec toutes les arêtes entre nœuds conservés
+            const directEdges = fullNetworkData.edges.filter(edge =>
+                keptNodeIds.has(edge.source) && keptNodeIds.has(edge.target)
+            );
+            
+            // 3. Map pour stocker les meilleures arêtes (éviter doublons)
+            const edgeMap = new Map();
+            directEdges.forEach(edge => {
+                const key = `${Math.min(edge.source, edge.target)}-${Math.max(edge.source, edge.target)}`;
+                edgeMap.set(key, edge);
+            });
+            
+            // 4. Pour les connexions indirectes : regarder les arêtes qui passent par UN nœud supprimé
+            fullNetworkData.edges.forEach(edge1 => {
+                // Si edge1 va d'un nœud conservé vers un nœud supprimé
+                if (keptNodeIds.has(edge1.source) && !keptNodeIds.has(edge1.target)) {
+                    const keptNode1 = edge1.source;
+                    const intermediateNode = edge1.target;
+                    
+                    // Chercher les arêtes qui partent de ce nœud supprimé vers d'autres nœuds conservés
+                    fullNetworkData.edges.forEach(edge2 => {
+                        if (edge2.source === intermediateNode && keptNodeIds.has(edge2.target) && edge2.target !== keptNode1) {
+                            const keptNode2 = edge2.target;
+                            const key = `${Math.min(keptNode1, keptNode2)}-${Math.max(keptNode1, keptNode2)}`;
+                            
+                            const newEdge = {
+                                source: keptNode1,
+                                target: keptNode2,
+                                distance: edge1.distance + edge2.distance,
+                                demand: edge1.demand + edge2.demand,
+                                duration: edge1.duration + edge2.duration,
+                                route_type: "Mixed",
+                                trips: Math.min(edge1.trips, edge2.trips)
+                            };
+                            
+                            // Garder la meilleure arête
+                            if (!edgeMap.has(key) || edgeMap.get(key).distance > newEdge.distance) {
+                                edgeMap.set(key, newEdge);
+                            }
+                        }
+                        // Aussi dans l'autre sens
+                        if (edge2.target === intermediateNode && keptNodeIds.has(edge2.source) && edge2.source !== keptNode1) {
+                            const keptNode2 = edge2.source;
+                            const key = `${Math.min(keptNode1, keptNode2)}-${Math.max(keptNode1, keptNode2)}`;
+                            
+                            const newEdge = {
+                                source: keptNode1,
+                                target: keptNode2,
+                                distance: edge1.distance + edge2.distance,
+                                demand: edge1.demand + edge2.demand,
+                                duration: edge1.duration + edge2.duration,
+                                route_type: "Mixed",
+                                trips: Math.min(edge1.trips, edge2.trips)
+                            };
+                            
+                            if (!edgeMap.has(key) || edgeMap.get(key).distance > newEdge.distance) {
+                                edgeMap.set(key, newEdge);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // 5. Appliquer les filtres finaux et retourner
+            const finalEdges = Array.from(edgeMap.values()).filter(edge =>
+                edge.trips >= currentFilters.minTrips &&
+                edge.distance <= currentFilters.maxDistance
+            );
+            
+            return { nodes: filteredNodes, edges: finalEdges };
+        }
         function initializeApp() {
             setupEventListeners();
             loadCountryData(currentCountry);
@@ -808,10 +848,10 @@ function filterData() {
             applyFilters();
         }
 
-        function updateStatistics() {
+        async function updateStatistics() {
             if (!fullNetworkData) return;
 
-            const filteredData = filterData();
+            const filteredData = await filterData();
             
             document.getElementById('visible-cities').textContent = filteredData.nodes.length;
             document.getElementById('visible-connections').textContent = filteredData.edges.length;
@@ -832,7 +872,7 @@ function filterData() {
             document.getElementById('loading-overlay').classList.remove('active');
         }
 
-        function applyFilters() {
+        async function applyFilters() {
             if (!fullNetworkData) {
                 console.log('No data loaded yet');
                 return;
@@ -851,7 +891,7 @@ function filterData() {
             updateCityTypeFilters();
 
             // Filter data and create graph
-            const filteredData = filterData();
+            const filteredData = await filterData();
             const graphConfig = createGraph(filteredData);
 
             // Update the graph
@@ -899,7 +939,8 @@ function filterData() {
             const colorScale = {
                 high_speed: '#961703',
                 intercity: '#039677',
-                regional: '#6eab05'
+                regional: '#6eab05',
+                mixed: '#9e32a8'
             };
 
             const layoutData = calculateLayout(data, currentFilters.layout);
@@ -911,7 +952,7 @@ function filterData() {
             layoutData.edges.forEach(edge => {
                 const source = layoutData.nodes.find(n => n.id === edge.source);
                 const target = layoutData.nodes.find(n => n.id === edge.target);
-                const routeType = edge.route_type || 'regional';
+                const routeType = edge.dominant_train_type || 'regional';
 
                 if (source && target) {
                     if (!edgeTraces[routeType]) {
@@ -938,9 +979,18 @@ function filterData() {
 
                     edgeTraces[routeType].weights.push(weight);
 
+                    if (typeof edge.demand === 'undefined') {
+                        edge.demand = (source.population + target.population) / edge.distance;
+                    }
+                    
+                    if (typeof edge.stops === 'undefined') {
+                        edge.stops = null;
+                    }
+
                     const hoverText = `<b>${source.name} ↔ ${target.name}</b><br>` +
                                     `Type: ${routeType.replace('_', ' ').toUpperCase()}<br>` +
-                                    `Distance: ${edge.distance} km<br>` +
+                                    `Distance: ${parseInt(edge.distance)} km<br>` +
+                                    `Demand: ${parseInt(edge.demand)} travellers<br>` +
                                     `Duration: ${edge.duration} min<br>` +
                                     `Daily trips: ${edge.trips}`;
                     edgeTraces[routeType].hover_text.push(hoverText);
