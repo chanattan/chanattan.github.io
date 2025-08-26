@@ -658,7 +658,7 @@
             document.getElementById('avg-distance').textContent = '-';
         }
 
-        function filterData() {
+function filterData() {
     if (!fullNetworkData) return { nodes: [], edges: [] };
     
     const filteredNodes = fullNetworkData.nodes.filter(node =>
@@ -668,119 +668,93 @@
     );
     
     const nodeIds = new Set(filteredNodes.map(n => n.id));
-    const removedNodeIds = new Set(
-        fullNetworkData.nodes
-            .filter(node => !nodeIds.has(node.id))
-            .map(n => n.id)
-    );
     
-    // Créer un graphe d'adjacence pour navigation facile
-    const adjacencyMap = new Map();
-    fullNetworkData.edges.forEach(edge => {
-        if (!adjacencyMap.has(edge.source)) adjacencyMap.set(edge.source, []);
-        if (!adjacencyMap.has(edge.target)) adjacencyMap.set(edge.target, []);
-        
-        adjacencyMap.get(edge.source).push({
-            nodeId: edge.target,
-            distance: edge.distance,
-            trips: edge.trips
-        });
-        adjacencyMap.get(edge.target).push({
-            nodeId: edge.source,
-            distance: edge.distance,
-            trips: edge.trips
-        });
-    });
-    
-    // Fonction itérative (BFS) pour trouver tous les nœuds conservés accessibles
-    function findReachableKeptNodes(startNodeId) {
-        const reachableNodes = [];
-        const queue = [{
-            nodeId: startNodeId,
-            distance: 0,
-            minTrips: Infinity,
-            path: new Set([startNodeId])
-        }];
-        
-        while (queue.length > 0) {
-            const current = queue.shift();
-            const neighbors = adjacencyMap.get(current.nodeId) || [];
-            
-            for (const neighbor of neighbors) {
-                // Éviter les cycles
-                if (current.path.has(neighbor.nodeId)) continue;
-                
-                const newDistance = current.distance + neighbor.distance;
-                const newMinTrips = Math.min(current.minTrips, neighbor.trips);
-                const newPath = new Set([...current.path, neighbor.nodeId]);
-                
-                if (nodeIds.has(neighbor.nodeId)) {
-                    // Nœud conservé trouvé - ne pas l'ajouter au queue
-                    if (neighbor.nodeId !== startNodeId) { // Éviter self-loop
-                        reachableNodes.push({
-                            nodeId: neighbor.nodeId,
-                            totalDistance: newDistance,
-                            minTrips: newMinTrips
-                        });
-                    }
-                } else if (removedNodeIds.has(neighbor.nodeId)) {
-                    // Nœud supprimé : continuer le parcours
-                    queue.push({
-                        nodeId: neighbor.nodeId,
-                        distance: newDistance,
-                        minTrips: newMinTrips,
-                        path: newPath
-                    });
-                }
-            }
-        }
-        
-        return reachableNodes;
-    }
-    
-    // Garder les arêtes directes entre nœuds conservés
-    const filteredEdges = fullNetworkData.edges.filter(edge =>
+    // 1. Garder les arêtes directes entre nœuds conservés
+    let filteredEdges = fullNetworkData.edges.filter(edge =>
         nodeIds.has(edge.source) &&
         nodeIds.has(edge.target) &&
         edge.trips >= currentFilters.minTrips &&
         edge.distance <= currentFilters.maxDistance
     );
     
-    // Set pour éviter les doublons
-    const existingEdges = new Set();
-    filteredEdges.forEach(edge => {
-        const key = `${Math.min(edge.source, edge.target)}-${Math.max(edge.source, edge.target)}`;
-        existingEdges.add(key);
-    });
+    // 2. Algorithme de "contraction" itératif simple
+    // Tant qu'il y a des nœuds supprimés avec exactement 2 connexions, les "contracter"
+    let currentEdges = [...fullNetworkData.edges];
+    let nodesToRemove = new Set(
+        fullNetworkData.nodes
+            .filter(node => !nodeIds.has(node.id))
+            .map(n => n.id)
+    );
     
-    // Pour chaque nœud conservé, trouver tous les autres nœuds conservés
-    // accessibles en passant par au moins un nœud supprimé
-    nodeIds.forEach(startNodeId => {
-        const reachableNodes = findReachableKeptNodes(startNodeId);
+    let changed = true;
+    while (changed && nodesToRemove.size > 0) {
+        changed = false;
         
-        reachableNodes.forEach(reachable => {
-            const key = `${Math.min(startNodeId, reachable.nodeId)}-${Math.max(startNodeId, reachable.nodeId)}`;
-            
-            // Éviter les doublons
-            if (!existingEdges.has(key)) {
-                const newEdge = {
-                    source: startNodeId,
-                    target: reachable.nodeId,
-                    distance: reachable.totalDistance,
-                    trips: reachable.minTrips
-                };
+        // Créer un map de degré pour les nœuds supprimés
+        const removedNodeDegrees = new Map();
+        nodesToRemove.forEach(nodeId => {
+            const degree = currentEdges.filter(edge => 
+                edge.source === nodeId || edge.target === nodeId
+            ).length;
+            removedNodeDegrees.set(nodeId, degree);
+        });
+        
+        // Traiter les nœuds supprimés avec degré 2 (chaîne simple)
+        for (const [removedNodeId, degree] of removedNodeDegrees) {
+            if (degree === 2) {
+                const connectedEdges = currentEdges.filter(edge =>
+                    edge.source === removedNodeId || edge.target === removedNodeId
+                );
                 
-                // Vérifier que la nouvelle arête respecte les filtres
-                if (newEdge.trips >= currentFilters.minTrips && 
-                    newEdge.distance <= currentFilters.maxDistance) {
-                    filteredEdges.push(newEdge);
-                    existingEdges.add(key);
+                if (connectedEdges.length === 2) {
+                    const edge1 = connectedEdges[0];
+                    const edge2 = connectedEdges[1];
+                    
+                    // Identifier les deux voisins
+                    const neighbor1 = edge1.source === removedNodeId ? edge1.target : edge1.source;
+                    const neighbor2 = edge2.source === removedNodeId ? edge2.target : edge2.source;
+                    
+                    // Créer une nouvelle arête directe
+                    const newEdge = {
+                        source: neighbor1,
+                        target: neighbor2,
+                        distance: edge1.distance + edge2.distance,
+                        trips: Math.min(edge1.trips, edge2.trips)
+                    };
+                    
+                    // Supprimer les anciennes arêtes et ajouter la nouvelle
+                    currentEdges = currentEdges.filter(edge => 
+                        edge.source !== removedNodeId && edge.target !== removedNodeId
+                    );
+                    currentEdges.push(newEdge);
+                    
+                    // Retirer ce nœud de la liste à supprimer
+                    nodesToRemove.delete(removedNodeId);
+                    changed = true;
+                    break; // Recommencer pour éviter les conflits
                 }
             }
-        });
+        }
+    }
+    
+    // 3. Filtrer le résultat final
+    const finalFilteredEdges = currentEdges.filter(edge =>
+        nodeIds.has(edge.source) &&
+        nodeIds.has(edge.target) &&
+        edge.trips >= currentFilters.minTrips &&
+        edge.distance <= currentFilters.maxDistance
+    );
+    
+    // 4. Déduplication
+    const edgeMap = new Map();
+    finalFilteredEdges.forEach(edge => {
+        const key = `${Math.min(edge.source, edge.target)}-${Math.max(edge.source, edge.target)}`;
+        if (!edgeMap.has(key) || edgeMap.get(key).distance > edge.distance) {
+            edgeMap.set(key, edge);
+        }
     });
     
-    return { nodes: filteredNodes, edges: filteredEdges };
+    return { nodes: filteredNodes, edges: Array.from(edgeMap.values()) };
 }
 
         function initializeApp() {
@@ -923,9 +897,9 @@
 
         function createGraph(data) {
             const colorScale = {
-                high_speed: '#ff6b35',
-                intercity: '#f7931e', 
-                regional: '#ff9f1c'
+                high_speed: '#961703',
+                intercity: '#039677',
+                regional: '#6eab05'
             };
 
             const layoutData = calculateLayout(data, currentFilters.layout);
@@ -1027,7 +1001,7 @@
                 trace.hovertext.push(hoverText);
             });
 
-            const nodeColors = { major: '#ffffff', medium: '#cccccc', small: '#999999' };
+            const nodeColors = { major: '#a10000', medium: '#bd3419', small: '#000000' };
 
             Object.keys(nodeTracesByType).forEach(nodeType => {
                 const trace = nodeTracesByType[nodeType];
@@ -1043,7 +1017,7 @@
                     },
                     text: trace.text,
                     textposition: "middle center",
-                    textfont: { size: 8, color: "#000000", family: "Arial Black" },
+                    textfont: { size: 11, color: "#ffffff", family: "Arial Black" },
                     hoverinfo: 'text',
                     hovertext: trace.hovertext,
                     hovertemplate: '%{hovertext}<extra></extra>',
