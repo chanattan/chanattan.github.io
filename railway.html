@@ -980,7 +980,7 @@
                     edgeTraces[routeType].weights.push(weight);
 
                     if (typeof edge.demand === 'undefined') {
-                        edge.demand = (source.population * target.population) / edge.distance;
+                        edge.demand = (source.population * target.population) / (edge.distance * 1000);
                     }
                     
                     if (typeof edge.stops === 'undefined') {
