@@ -33,7 +33,7 @@
             grid-column: 1 / -1;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             border-bottom: 2px solid #ff6b35;
-            padding: 20px 30px;
+            padding: 20px 160px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -391,9 +391,43 @@
                 min-height: 500px;
             }
         }
+
+        .btn-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff6b35;
+            border-radius: 8px;
+            color: #eeecec;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-home:hover {
+            background: rgba(255, 107, 53, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 7px rgba(255, 107, 53, 0.2);
+        }
+
+        .home-icon {
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <a href="index.html" class="btn-home">
+        <span class="home-icon">←</span>
+        Main website
+    </a>
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
