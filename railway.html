@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>European Railway Network Analytics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -420,6 +421,7 @@
                     <label>Railway Network</label>
                     <select class="filter-input country-select" id="country-select">
                         <option value="france">🇫🇷 France</option>
+                        <option value="switzerland">🇨🇭 Switzerland</option>
                         <option value="italy">🇮🇹 Italy</option>
                         <option value="spain">🇪🇸 Spain</option>
                         <option value="uk">🇬🇧 United Kingdom</option>
@@ -562,6 +564,7 @@
     <script>
         const COUNTRY_CONFIG = {
             france: { name: 'France', flag: '🇫🇷', file: 'france_railway_network.json' },
+            switzerland: {name: 'Switzerland', flag: '🇨🇭', file: 'switzerland_railway_network.json' },
             italy: { name: 'Italy', flag: '🇮🇹', file: 'italy_railway_network.json' },
             spain: { name: 'Spain', flag: '🇪🇸', file: 'spain_railway_network.json' },
             uk: { name: 'United Kingdom', flag: '🇬🇧', file: 'uk_railway_network.json' },
@@ -607,7 +610,7 @@
                     throw new Error(`Unknown country: ${countryCode}`);
                 }
 
-                const response = await fetch(`data/${config.file}`);
+                const response = await fetch(`data/${countryCode}/${config.file}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load ${config.name} data: ${response.status}`);
                 }
@@ -665,7 +668,10 @@
             
             // Construire le nom du fichier
             const countryName = currentCountry || 'france'; // Fallback vers france si pas défini
-            const filename = minPop > 0 ? `data/${countryName}_railway_network_pop_threshold_${minPop}k.json` : `data/${countryName}_railway_network.json`;
+            var filename = minPop > 0 ? `data/${countryName}/${countryName}_railway_network_pop_threshold_${minPop}k.json` : `data/${countryName}/${countryName}_railway_network.json`;
+            if (countryName == 'switzerland' && minPop >= 210) {
+                filename = `data/${countryName}/${countryName}_railway_network_pop_threshold_210k.json`
+            }
             
             try {
                 // Charger le fichier approprié
