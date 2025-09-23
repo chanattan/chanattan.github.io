@@ -108,6 +108,28 @@
             overflow-y: auto;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
         }
+
+        .separator-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+            margin: 20px 0;
+        }
+
+        .metric-result {
+            margin: 20px 0;
+        }
+
+        .metric-value-box {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-top: 8px;
+        }
         
         .filter-section {
             margin-bottom: 32px;
@@ -465,14 +487,13 @@
 
                 <div id="error-container"></div>
             </div>
-
             <div class="filter-section">
                 <div class="filter-title">Network Filters</div>
 
                 <div class="filter-group">
                     <label>City Population Threshold</label>
                     <input type="range" class="filter-input range-input" id="population-range" 
-                           min="0" max="500000" step="10000" value="0">
+                        min="0" max="500000" step="10000" value="0">
                     <div class="range-display">
                         <span>0</span>
                         <span class="range-value" id="population-value">0</span>
@@ -483,7 +504,7 @@
                 <div class="filter-group">
                     <label>Minimum Connections</label>
                     <input type="range" class="filter-input range-input" id="connections-range" 
-                           min="1" max="20" value="1">
+                        min="1" max="20" value="1">
                     <div class="range-display">
                         <span>1</span>
                         <span class="range-value" id="connections-value">1</span>
@@ -491,48 +512,6 @@
                     </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>Minimum Daily Trips</label>
-                    <input type="range" class="filter-input range-input" id="trips-range" 
-                           min="1" max="100" value="1">
-                    <div class="range-display">
-                        <span>1</span>
-                        <span class="range-value" id="trips-value">1</span>
-                        <span>100+</span>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <label>Maximum Distance (km)</label>
-                    <input type="range" class="filter-input range-input" id="distance-range" 
-                           min="0" max="1000" step="50" value="1000">
-                    <div class="range-display">
-                        <span>0</span>
-                        <span class="range-value" id="distance-value">1000</span>
-                        <span>1000+</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="filter-section">
-                <div class="filter-title">City Types</div>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="major-cities" checked>
-                        <span>Major Cities</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="medium-cities" checked>
-                        <span>Medium Cities</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="small-cities" checked>
-                        <span>Small Cities</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="filter-section">
                 <div class="filter-title">Visualization</div>
                 
                 <div class="filter-group">
@@ -545,20 +524,31 @@
                     </select>
                 </div>
 
-                <div class="filter-group">
-                    <label>Edge Weight by</label>
-                    <select class="filter-input" id="edge-weight">
-                        <option value="trips">Daily Trips</option>
-                        <option value="distance">Distance</option>
-                        <option value="duration">Travel Time</option>
-                    </select>
-                </div>
+                <button class="btn" onclick="applyFilters()">Apply Filters</button>
             </div>
 
             <div class="filter-section">
-                <button class="btn" onclick="applyFilters()">Apply Filters</button>
-                <br><br>
-                <button class="btn btn-secondary" onclick="resetFilters()">Reset All</button>
+                <div class="filter-title">Fairness Metrics</div>
+                <div class="separator-line"></div>
+                
+                <div class="filter-group">
+                    <label>Select Metric</label>
+                    <select class="filter-input" id="fairness-metric-select">
+                        <option value="SW">p-Social Welfare (SW)</option>
+                        <option value="CW">Common Welfare (CW)</option>
+                        <option value="CW2">Distance to max-cost (CW2)</option>
+                        <option value="ACC">Common Welfare with Accessibility (ACC)</option>
+                        <option value="GW1">Gini Welfare Index (GW1)</option>
+                        <option value="GW2">Cumulative Gini Index (GW2)</option>
+                    </select>
+                </div>
+
+                <div class="metric-result">
+                    <label>Metric Value</label>
+                    <div class="metric-value-box" id="metric-value">-</div>
+                </div>
+
+                <button class="btn" onclick="evaluateFairness()">Evaluate Fairness</button>
             </div>
         </aside>
 
@@ -658,6 +648,8 @@
                 fullNetworkData = data;
                 currentCountry = countryCode;
                 
+                // Initialize distances and demands
+                initializeNetworkData(data);
                 updateCountryDisplay(countryCode);
                 
                 // Update data timestamp if available
@@ -837,6 +829,290 @@
             
             return { nodes: filteredNodes, edges: finalEdges };
         }
+
+        // Data structures to store distances and demands
+        let cityDistances = {};
+        let cityDemands = {};
+
+        // Function to initialize distances and demands from network data
+        function initializeNetworkData(networkData) {
+            if (networkData.distances) {
+                cityDistances = networkData.distances;
+            }
+            if (networkData.demands) {
+                cityDemands = networkData.demands;
+            }
+        }
+
+        // Helper function to get distance between two cities
+        function getDistance(city1Id, city2Id) {
+            const key1 = `${city1Id}-${city2Id}`;
+            const key2 = `${city2Id}-${city1Id}`;
+            return cityDistances[key1] || cityDistances[key2] || 0;
+        }
+
+        // Helper function to get demand between two cities
+        function getDemand(city1Id, city2Id) {
+            const key1 = `${city1Id}-${city2Id}`;
+            const key2 = `${city2Id}-${city1Id}`;
+            return cityDemands[key1] || cityDemands[key2] || 0;
+        }
+
+        // Helper function to get all possible paths (for accessibility)
+        function getAllPaths() {
+
+        }
+
+        // Helper function to compute Dijkstra
+        function getShortestPath() {
+
+        }
+
+        // Implementation of fairness metrics
+        const fairnessMetrics = {
+            // p-Social Welfare
+            SW: function(cities, railways) {
+                const p = 2; // Can be parameterized if needed
+                let totalCost = 0;
+                let pairs = 0;
+                
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathCost = calculatePathCost(path);
+                        const demand = getDemand(cities[i].id, cities[j].id);
+                        totalCost += demand * Math.pow(pathCost, p);
+                        pairs++;
+                    }
+                }
+                
+                return Math.pow(totalCost / pairs, 1/p);
+            },
+
+            // Common Welfare
+            CW: function(cities, railways) {
+                let totalRatio = 0;
+                let pairs = 0;
+                
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathTime = calculatePathTime(path);
+                        const directDistance = getDistance(cities[i].id, cities[j].id);
+                        if (directDistance > 0) {
+                            totalRatio += pathTime / directDistance;
+                            pairs++;
+                        }
+                    }
+                }
+                
+                return pairs > 0 ? totalRatio / pairs : 0;
+            },
+
+            // Distance to max-cost
+            CW2: function(cities, railways) {
+                let maxRatio = 0;
+                let totalDiff = 0;
+                let pairs = 0;
+                
+                // First find max ratio
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathTime = calculatePathTime(path);
+                        const directDistance = getDistance(cities[i].id, cities[j].id);
+                        if (directDistance > 0) {
+                            const ratio = pathTime / directDistance;
+                            maxRatio = Math.max(maxRatio, ratio);
+                        }
+                    }
+                }
+                
+                // Then compute differences
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathTime = calculatePathTime(path);
+                        const directDistance = getDistance(cities[i].id, cities[j].id);
+                        if (directDistance > 0) {
+                            const ratio = pathTime / directDistance;
+                            totalDiff += Math.abs(maxRatio - ratio);
+                            pairs++;
+                        }
+                    }
+                }
+                
+                return pairs > 0 ? totalDiff / pairs : 0;
+            },
+
+            // Common Welfare with Accessibility
+            ACC: function(cities, railways) {
+                let totalValue = 0;
+                let pairs = 0;
+                
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathTime = calculatePathTime(path);
+                        const directDistance = getDistance(cities[i].id, cities[j].id);
+                        const accessibility = calculateAccessibility(cities[i], cities[j], railways);
+                        if (directDistance > 0) {
+                            totalValue += (accessibility * pathTime) / directDistance;
+                            pairs++;
+                        }
+                    }
+                }
+                
+                return pairs > 0 ? totalValue / pairs : 0;
+            },
+
+            // Gini Welfare Index
+            GW1: function(cities, railways) {
+                const giniValues = [];
+                
+                for (const city of cities) {
+                    const costs = [];
+                    for (const otherCity of cities) {
+                        if (city.id !== otherCity.id) {
+                            const path = getShortestPath(city, otherCity, railways);
+                            const pathTime = calculatePathTime(path);
+                            const directDistance = getDistance(city.id, otherCity.id);
+                            if (directDistance > 0) {
+                                costs.push(directDistance / pathTime);
+                            }
+                        }
+                    }
+                    if (costs.length > 0) {
+                        giniValues.push(calculateGiniCoefficient(costs));
+                    }
+                }
+                
+                return giniValues.length > 0 ? 
+                    giniValues.reduce((a, b) => a + b) / giniValues.length : 0;
+            },
+
+            // Cumulative Gini Index
+            GW2: function(cities, railways) {
+                const costs = [];
+                
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        const path = getShortestPath(cities[i], cities[j], railways);
+                        const pathTime = calculatePathTime(path);
+                        const directDistance = getDistance(cities[i].id, cities[j].id);
+                        if (directDistance > 0) {
+                            costs.push(directDistance / pathTime);
+                        }
+                    }
+                }
+                
+                return calculateGiniCoefficient(costs);
+            }
+        };
+
+        // Helper functions for metric calculations
+        function calculatePathCost(path) {
+            return path.reduce((total, edge) => total + edge.time, 0);
+        }
+
+        function calculatePathTime(path) {
+            return path.reduce((total, edge) => total + edge.duration, 0);
+        }
+
+        function calculateAccessibility(city1, city2, railways) {
+            const paths = getAllPaths(city1, city2, railways);
+            const totalDistance = paths.reduce((sum, path) => 
+                sum + path.reduce((pathDist, edge) => pathDist + edge.distance, 0), 0);
+            return paths.length > 0 ? paths.length / totalDistance : 0;
+        }
+
+        function calculateGiniCoefficient(values) {
+            if (values.length === 0) return 0;
+            
+            const sortedValues = [...values].sort((a, b) => a - b);
+            const n = sortedValues.length;
+            let numerator = 0;
+            
+            for (let i = 0; i < n; i++) {
+                numerator += (2 * i - n + 1) * sortedValues[i];
+            }
+            
+            const mean = sortedValues.reduce((a, b) => a + b) / n;
+            return numerator / (n * n * mean);
+        }
+
+        // UI functions for the fairness metrics section
+        function setupFairnessMetrics() {
+            const metricsSection = document.createElement('div');
+            metricsSection.className = 'filter-section';
+            metricsSection.innerHTML = `
+                <div class="filter-title">Fairness Metrics</div>
+                <div class="filter-group">
+                    <label>Select Metric</label>
+                    <select class="filter-input" id="fairness-metric">
+                        <option value="SW">p-Social Welfare (SW)</option>
+                        <option value="CW">Common Welfare (CW)</option>
+                        <option value="CW2">Distance to max-cost (CW2)</option>
+                        <option value="ACC">Accessibility-based (ACC)</option>
+                        <option value="GW1">Gini Welfare (GW1)</option>
+                        <option value="GW2">Cumulative Gini (GW2)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="metric-result">
+                        <label>Metric Value</label>
+                        <div id="metric-value" class="metric-value-display">-</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="evaluateFairness()">Evaluate Fairness</button>
+            `;
+            
+            // Insert the metrics section before the Apply Filters button
+            const sidebar = document.querySelector('.sidebar');
+            const applyFiltersButton = sidebar.querySelector('.btn');
+            sidebar.insertBefore(metricsSection, applyFiltersButton.parentElement);
+            
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .metric-value-display {
+                    background: #2a2a2a;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #ff6b35;
+                    text-align: center;
+                    margin-top: 8px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Function to evaluate the selected fairness metric
+        function evaluateFairness() {
+            const metricSelect = document.getElementById('fairness-metric');
+            const selectedMetric = metricSelect.value;
+            const metricValueDisplay = document.getElementById('metric-value');
+            
+            if (!fullNetworkData) {
+                metricValueDisplay.textContent = 'No data loaded';
+                return;
+            }
+            
+            try {
+                const filteredData = filterData();
+                const result = fairnessMetrics[selectedMetric](
+                    filteredData.nodes,
+                    filteredData.edges
+                );
+                metricValueDisplay.textContent = result.toFixed(4);
+            } catch (error) {
+                console.error('Error calculating metric:', error);
+                metricValueDisplay.textContent = 'Error';
+            }
+        }
+
         function initializeApp() {
             setupEventListeners();
             loadCountryData(currentCountry);
@@ -1267,7 +1543,10 @@
         }
 
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFairnessMetrics();
+            initializeApp()
+        });
     </script>
 </body>
 </html>
