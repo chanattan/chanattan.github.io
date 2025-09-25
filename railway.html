@@ -1148,14 +1148,25 @@
                 
                 // Use dominant_train_type first, then route_type as fallback
                 let routeType = edge.dominant_train_type || edge.route_type || 'default';
+                routeType = routeType.toLowerCase();
                 
-                // Normalize the route type for better categorization
-                if (routeType === 'TER' || routeType === 'regional') {
+                // Normalize the route type for better categorization for France
+                if (routeType === 'ter' || routeType === 'regional') {
                     routeType = 'TER';
-                } else if (routeType === 'TGV' || routeType === 'high_speed') {
+                } else if (routeType === 'tgv' || routeType === 'high_speed') {
                     routeType = 'TGV';
-                } else if (routeType === 'INTERCITES' || routeType === 'intercity') {
+                } else if (routeType === 'intercites' || routeType === 'intercity') {
                     routeType = 'INTERCITES';
+                } else if (routeType == "high-speed") {
+                    routeType = "TGV";
+                } else if (routeType == "regional") {
+                    routeType = "TER";
+                } else if (routeType == "intercity") {
+                    routeType = "INTERCITES";
+                } else if (routeType == "inter-regional") {
+                    routeType = "INTERCITES"; // TODO add inter regional
+                } else {
+                    routeType = 'default';
                 }
 
                 if (source && target) {
