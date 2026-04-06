@@ -66,22 +66,24 @@ h4 { margin: 0 0 14px; color: var(--text-dim); font-weight: 400; font-size: 14px
 }
 .research-item:hover::before { background: var(--accent); }
 
+/* Left column: logo + date */
 .research-meta {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 8px;
 }
 
 .inst-logo {
-  width: 120px; height: 120px;
+  width: 80px; height: 80px;
   object-fit: contain;
-  border-radius: 5px;
+  border-radius: 6px;
   background: #fff;
-  padding: 5px;
+  padding: 6px;
   filter: grayscale(20%);
   transition: filter .2s;
 }
 .research-item:hover .inst-logo { filter: grayscale(0%); }
 
+/* Fallback badge when no logo available */
 .inst-badge {
   width: 80px; height: 80px;
   border-radius: 6px;
@@ -174,40 +176,14 @@ footer a:hover { color: var(--accent); }
 
   <div class="timeline">
 
-    <!-- 0 — SORBONNE -->
-    <div class="research-item">
-      <div class="research-meta">
-          <img src="logos/sorbonne_logo.jpg" alt="LIP6" class="inst-logo">
-        <div class="research-date">March-Sep<br>2026</div>
-      </div>
-      <div class="research-content">
-        <div class="research-header">
-          <div>
-            <div class="research-title">Research Intern <span style="color:var(--text-dim);font-size:13px;font-weight:400;">[current]</span></div>
-            <div class="research-place">
-              Multi-Agent Systems & Operational Research & Decision groups, <a href="https://www.lip6.fr/" target="_blank">LIP6</a> – Sorbonne University, Paris, France<br>
-              Supervisors:
-              <a href="https://perso.lip6.fr/Fanny.Pascual/" target="_blank">Fanny Pascual</a>,
-              <a href="https://benabbou.lip6.fr/" target="_blank">Nawal Benabbou</a>,
-              <a href="https://webia.lip6.fr/~beyniera/" target="_blank">Aurélie Beynier</a>
-            </div>
-          </div>
-          <span class="status-badge pending">Article in writing</span>
-        </div>
-        <div class="research-body">
-          Study of notions of fairness and conception of algorithms in multi-criteria collective decision-making problems. Including fair allocation of indivisible goods, with rich preference structures (Matroid Rank Preferences, etc.).
-          This implies equilibria study (game theory), design of strategy-proof mechanisms, and approximation algorithms for NP-hard problems. The work is theoretical, with some experiments on synthetic data.
-        </div>
-        <div class="research-link">
-          <span style="color:var(--text-dim)">[Paper pending]</span>
-        </div>
-      </div>
-    </div>
-
     <!-- 1 — LAMSADE -->
     <div class="research-item">
       <div class="research-meta">
-          <img src="logos/dauphine_logo.png" alt="LAMSADE" class="inst-logo">
+        <!--
+          Ideally: <img src="logos/lamsade.png" alt="LAMSADE" class="inst-logo">
+          Until you have the file, the badge below is shown.
+        -->
+        <div class="inst-badge">LAMSADE Dauphine</div>
         <div class="research-date">May–Sep<br>2025</div>
       </div>
       <div class="research-content">
@@ -222,7 +198,7 @@ footer a:hover { color: var(--accent); }
               <a href="https://www.lamsade.dauphine.fr/~sikora/" target="_blank">Florian Sikora</a>
             </div>
           </div>
-          <span class="status-badge pending">Article in writing</span>
+          <span class="status-badge ongoing">In progress</span>
         </div>
         <div class="research-body">
           Modelling EU railway networks (Switzerland, France) and evaluating fairness using social choice metrics — p-Social Welfare, Gini and Atkinson indices — based on travel time and distance relative to ideal lines. Networks are available on the <a href="railway.html">Railway Networks</a> page.
@@ -236,7 +212,10 @@ footer a:hover { color: var(--accent); }
     <!-- 2 — Hamburg -->
     <div class="research-item">
       <div class="research-meta">
-        <img src="logos/CSL_Logo.png" alt="HCU Hamburg" class="inst-logo">
+        <!--
+          Ideally: <img src="logos/hcu.png" alt="HCU Hamburg" class="inst-logo">
+        -->
+        <div class="inst-badge">CSL HCU Hamburg</div>
         <div class="research-date">Feb–May<br>2025</div>
       </div>
       <div class="research-content">
@@ -264,7 +243,10 @@ footer a:hover { color: var(--accent); }
     <!-- 3 — CITI / INSA Lyon -->
     <div class="research-item">
       <div class="research-meta">
-        <img src="logos/inr_logo_rouge.png" alt="Inria" class="inst-logo">
+        <!--
+          Ideally: <img src="logos/inria.png" alt="Inria" class="inst-logo">
+        -->
+        <div class="inst-badge">CITI Lab Inria Lyon</div>
         <div class="research-date">Sep–Dec<br>2024</div>
       </div>
       <div class="research-content">
@@ -291,7 +273,10 @@ footer a:hover { color: var(--accent); }
     <!-- 4 — Aarhus -->
     <div class="research-item">
       <div class="research-meta">
-        <img src="logos/aarhus_logo.jpg" alt="Aarhus University" class="inst-logo">
+        <!--
+          Ideally: <img src="logos/aarhus.png" alt="Aarhus University" class="inst-logo">
+        -->
+        <div class="inst-badge">Aarhus University</div>
         <div class="research-date">May–Aug<br>2024</div>
       </div>
       <div class="research-content">
@@ -316,16 +301,11 @@ footer a:hover { color: var(--accent); }
     <!-- 5 — IRISA / Thales -->
     <div class="research-item">
       <div class="research-meta">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; margin-bottom: -80px;">
-          <img src="logos/irisa_logo.png" alt="IRISA"
-               class="inst-logo"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <img src="logos/thales_logo.png" alt="Thales"
-               class="inst-logo"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-               style="height:60%">
+        <!--
+          Ideally: <img src="logos/irisa.png" alt="IRISA" class="inst-logo">
+        -->
+        <div class="inst-badge">IRISA ENS Rennes Thales</div>
         <div class="research-date">Sep 2023–<br>May 2024</div>
-        </div>
       </div>
       <div class="research-content">
         <div class="research-header">
@@ -341,8 +321,7 @@ footer a:hover { color: var(--accent); }
           <span class="status-badge published">SSDBM 2024</span>
         </div>
         <div class="research-body">
-          WebAssembly serverless join vs. native performance. Built a Rust comparison platform across serverless/serverful environments. Results: WebAssembly is up to 2x slower than native, sometimes only 20% slower, with lower cold-start times as a notable advantage.
-          Open perspectives for optimizing WebAssembly performance include Wasm modules management as decentralized programs, within a sandboxed environment.
+          WebAssembly serverless join vs. native performance. Built a Rust comparison platform across serverless/serverful environments. Results: WebAssembly is up to 2× slower than native, sometimes only 20% slower, with lower cold-start times as a notable advantage.
         </div>
         <div class="research-link">
           <a href="https://dl.acm.org/doi/pdf/10.1145/3676288.3676305" target="_blank"><i class="fa fa-file-text-o"></i>SSDBM 2024</a>
@@ -353,7 +332,7 @@ footer a:hover { color: var(--accent); }
     <!-- 6 — Anticor -->
     <div class="research-item">
       <div class="research-meta">
-        <img src="logos/anticor_logo.jpg" alt="Anticor" class="inst-logo">
+        <div class="inst-badge">ENS Rennes Anticor</div>
         <div class="research-date">Nov 2023–<br>May 2024</div>
       </div>
       <div class="research-content">
@@ -378,7 +357,10 @@ footer a:hover { color: var(--accent); }
     <!-- 7 — LIP6 -->
     <div class="research-item">
       <div class="research-meta">
-        <img src="logos/sorbonne_logo.jpg" alt="LIP6" class="inst-logo">
+        <!--
+          Ideally: <img src="logos/lip6.png" alt="LIP6" class="inst-logo">
+        -->
+        <div class="inst-badge">LIP6 Sorbonne</div>
         <div class="research-date">May–Jul<br>2023</div>
       </div>
       <div class="research-content">
@@ -394,7 +376,7 @@ footer a:hover { color: var(--accent); }
           </div>
         </div>
         <div class="research-body">
-          Simulation of a generic negotiation model based on Earnest's model and Putnam's two-level game theory. Results: more agents -> harder negotiations, contradicting Earnest's proposition. Fully customizable for n-choice problems; batch experiments using genetic algorithms.
+          Simulation of a generic negotiation model based on Earnest's model and Putnam's two-level game theory. Results: more agents → harder negotiations, contradicting Earnest's proposition. Fully customizable for n-choice problems; batch experiments using genetic algorithms.
         </div>
         <div class="research-link">
           <a href="reports/mas_negotiations_lip6_report.pdf"><i class="fa fa-file-o"></i>Report</a>
